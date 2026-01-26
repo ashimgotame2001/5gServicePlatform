@@ -1,17 +1,31 @@
 # Smart 5G Service Platform
 
-A comprehensive Java backend platform leveraging Nokia's Network as Code platform and advanced 5G APIs to build real-world applications and services.
+A comprehensive Java backend platform leveraging Nokia's Network as Code platform and advanced 5G APIs to build real-world applications and services. Features **intelligent AI agents** that autonomously monitor, analyze, and optimize 5G network performance in real-time.
+
+## 🚀 Overview
+
+The Smart 5G Service Platform is a microservices-based solution that uses Nokia's Network as Code APIs to create autonomous AI agents capable of solving real-world problems across smart cities, emergency services, healthcare, transportation, and public safety.
+
+### Key Features
+
+- **🤖 Intelligent AI Agents**: 9 autonomous agents that use real network data to solve problems
+- **📡 Complete API Integration**: All Nokia Network as Code APIs integrated
+- **🏙️ Real-World Use Cases**: Smart cities, emergency connectivity, healthcare, transportation, public safety
+- **🔒 Enterprise Security**: OAuth2 Authorization Server with JWT tokens
+- **📊 Real-Time Monitoring**: Continuous network data collection and analysis
+- **⚡ Autonomous Decision Making**: Rule-based decision engine with ML-ready architecture
 
 ## Architecture Overview
 
-The platform consists of 6 microservices:
+The platform consists of **7 microservices**:
 
 1. **API Gateway** (Port 8080) - Single entry point with routing, authentication, and rate limiting
-2. **Auth Service** (Port 8085) - Authentication and authorization provider, user management
-3. **Connectivity Service** (Port 8081) - Manages network slices and QoS
-4. **Identification Service** (Port 8082) - Handles number verification and KYC checks
-5. **Location Service** (Port 8083) - Provides location verification and geo-fencing
+2. **Auth Service** (Port 8085) - OAuth2 Authorization Server, user management
+3. **Connectivity Service** (Port 8081) - Manages network slices and QoS on Demand
+4. **Identification Service** (Port 8082) - Handles number verification, KYC checks, device status, SIM swap detection
+5. **Location Service** (Port 8083) - Provides location verification, geofencing, population density analysis
 6. **Device Management Service** (Port 8084) - Manages SIM and device swaps
+7. **AI Agent Service** (Port 8086) - **Intelligent autonomous agents** ⭐
 
 ## Technology Stack
 
@@ -23,28 +37,43 @@ The platform consists of 6 microservices:
 - **Security**: Spring Security + OAuth2/JWT
 - **HTTP Client**: WebClient (Reactive)
 - **Monitoring**: Spring Boot Actuator + Prometheus
+- **APIs**: Nokia Network as Code (RapidAPI)
 
 ## Prerequisites
 
 - Java 21 or higher
 - PostgreSQL 12+ 
-- MongoDB 4.4+
+- MongoDB 4.4+ (or Docker with provided configuration)
 - Apache Kafka 2.8+
 - Gradle 8.0+ (or use included Gradle wrapper)
 
-## Setup Instructions
+## Quick Start
 
 ### 1. Database Setup
 
 #### PostgreSQL
 ```sql
 CREATE DATABASE smart_5g_db;
-CREATE USER postgres WITH PASSWORD 'your_password';
+CREATE USER postgres WITH PASSWORD 'password';
 GRANT ALL PRIVILEGES ON DATABASE smart_5g_db TO postgres;
 ```
 
-#### MongoDB
-MongoDB will be used automatically for logs and telemetry. Ensure MongoDB is running on `localhost:27017`.
+#### MongoDB (Docker)
+```yaml
+# docker-compose.yml
+mongodb:
+  image: mongo:7.0
+  container_name: mongodb
+  restart: unless-stopped
+  ports:
+    - "27017:27017"
+  environment:
+    MONGO_INITDB_ROOT_USERNAME: admin
+    MONGO_INITDB_ROOT_PASSWORD: admin123
+    MONGO_INITDB_DATABASE: mydb
+  volumes:
+    - mongo_data:/data/db
+```
 
 ### 2. Kafka Setup
 
@@ -57,67 +86,15 @@ bin/zookeeper-server-start.sh config/zookeeper.properties
 bin/kafka-server-start.sh config/server.properties
 ```
 
-### 3. Environment Variables Setup
-
-Each microservice uses `.env` files for configuration. You can set them up in two ways:
-
-#### Option 1: Automated Setup (Recommended)
-
-Run the setup script to create all `.env` files:
-
-```bash
-chmod +x setup-env.sh
-./setup-env.sh
-```
-
-Then update each `.env` file with your actual values.
-
-#### Option 2: Manual Setup
-
-Create a `.env` file in each service directory with the following variables:
-
-**For all services (except API Gateway):**
-```bash
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=smart_5g_db
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
-
-# MongoDB Configuration
-MONGO_HOST=localhost
-MONGO_PORT=27017
-MONGO_DB=smart_5g_logs
-
-# Kafka Configuration
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-
-# Nokia Network as Code API
-NOKIA_NAC_API_KEY=your_nokia_api_key
-NOKIA_NAC_BASE_URL=https://api.networkascode.nokia.io
-```
-
-**For API Gateway:**
-```bash
-# Kafka Configuration
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-
-# JWT Configuration
-JWT_SECRET=your-secret-key-change-in-production
-JWT_JWK_SET_URI=https://your-auth-provider.com/.well-known/jwks.json
-```
-
-📖 **See [ENV_SETUP.md](ENV_SETUP.md) for detailed instructions and troubleshooting.**
-
-> **Note**: The `.env` files are automatically loaded by each service using the `DotEnvConfig` class. Make sure to add `.env` to `.gitignore` to avoid committing sensitive information.
-
-### 4. Build and Run Services
+### 3. Build and Run Services
 
 #### Build all services:
 ```bash
 # API Gateway
 cd apiGateway && ./gradlew build
+
+# Auth Service
+cd auth-service && ./gradlew build
 
 # Connectivity Service
 cd connectivityService && ./gradlew build
@@ -130,30 +107,30 @@ cd locationService && ./gradlew build
 
 # Device Management Service
 cd deviceManagementService && ./gradlew build
+
+# AI Agent Service
+cd ai-agent-service && ./gradlew build
 ```
 
 #### Run services (in separate terminals):
 ```bash
-# API Gateway
-cd apiGateway && ./gradlew bootRun
-
-# Auth Service (start this first)
+# 1. Start Auth Service first (required for OAuth2)
 cd auth-service && ./gradlew bootRun
 
-# Connectivity Service
+# 2. Start API Gateway
+cd apiGateway && ./gradlew bootRun
+
+# 3. Start other services
 cd connectivityService && ./gradlew bootRun
-
-# Identification Service
 cd identification-service && ./gradlew bootRun
-
-# Location Service
 cd locationService && ./gradlew bootRun
-
-# Device Management Service
 cd deviceManagementService && ./gradlew bootRun
+
+# 4. Start AI Agent Service
+cd ai-agent-service && ./gradlew bootRun
 ```
 
-### 5. Authentication Setup
+### 4. Authentication Setup
 
 1. **Register a user:**
    ```bash
@@ -182,7 +159,48 @@ cd deviceManagementService && ./gradlew bootRun
      -H "Authorization: Bearer <your-jwt-token>"
    ```
 
-**Important**: Make sure the `JWT_SECRET` in both `apiGateway/.env` and `auth-service/.env` match!
+## 🤖 AI Agents
+
+The platform includes **9 intelligent AI agents** that autonomously solve real-world problems:
+
+### Core Agents
+
+1. **QoS Optimization Agent** - Autonomously optimizes Quality of Service based on real-time network conditions
+2. **Network Monitoring Agent** - Continuously monitors network conditions and detects anomalies
+3. **Location Verification Agent** - Autonomously verifies and manages location data
+4. **Device Management Agent** - Autonomously manages device and SIM card operations
+
+### Use Case Agents
+
+5. **Smart City Agent** - Monitors city infrastructure (traffic lights, sensors, cameras) - CityCare-like
+6. **Emergency Connectivity Agent** - Guarantees connectivity for emergency services
+7. **Healthcare Monitoring Agent** - Ensures reliable connectivity for remote patient monitoring
+8. **Transportation Agent** - Manages connectivity for transportation and event logistics
+9. **Public Safety Agent** - Monitors public safety systems and sustainability
+
+### Execute AI Agents
+
+```bash
+# Execute all agents for a device
+curl -X POST http://localhost:8080/ai-agents/execute/+1234567890 \
+  -H "Authorization: Bearer <token>"
+
+# Get execution history
+curl -X GET http://localhost:8080/ai-agents/history/+1234567890 \
+  -H "Authorization: Bearer <token>"
+
+# List all agents
+curl -X GET http://localhost:8080/ai-agents/agents \
+  -H "Authorization: Bearer <token>"
+
+# Get agent details
+curl -X GET http://localhost:8080/ai-agents/agents/qos-optimization-agent \
+  -H "Authorization: Bearer <token>"
+
+# Enable/disable agent
+curl -X PUT "http://localhost:8080/ai-agents/agents/qos-optimization-agent/enable?enabled=true" \
+  -H "Authorization: Bearer <token>"
+```
 
 ## API Endpoints
 
@@ -190,98 +208,207 @@ cd deviceManagementService && ./gradlew bootRun
 
 All requests should go through the API Gateway:
 
-- `GET /actuator/health` - Health check
-- `GET /actuator/metrics` - Metrics endpoint
+#### Authentication
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login and get JWT token
+
+#### Connectivity Service
 - `POST /connectivity/qos-request` - Request QoS adjustment
 - `GET /connectivity/status` - Get connectivity status
+
+#### Identification Service
 - `POST /identification/verify-number` - Verify phone number
 - `POST /identification/kyc-check` - Perform KYC check
 - `GET /identification/device-status` - Get device status
+
+#### Location Service
 - `GET /location/verify` - Verify location
 - `GET /location/geofence-alerts` - Get geo-fence alerts
+
+#### Device Management Service
 - `POST /device/swap-sim` - Swap SIM card
 - `POST /device/swap-device` - Swap device
 
-## Configuration Details
+#### AI Agent Service
+- `POST /ai-agents/execute/{phoneNumber}` - Execute all agents for a device
+- `GET /ai-agents/history/{phoneNumber}` - Get execution history
+- `GET /ai-agents/agents` - List all agents
+- `GET /ai-agents/agents/{agentId}` - Get agent details
+- `PUT /ai-agents/agents/{agentId}/enable` - Enable/disable agent
+- `GET /ai-agents/health` - Health check
 
-### WebClient Configuration
+#### Monitoring
+- `GET /actuator/health` - Health check
+- `GET /actuator/metrics` - Metrics endpoint
+- `GET /actuator/prometheus` - Prometheus metrics
 
-Each service has a `WebClientConfig` that configures:
-- Base URL for Nokia Network as Code APIs
-- Timeout settings (default: 30 seconds)
-- Default headers (Content-Type, Accept)
+## Network APIs Integration
 
-### Kafka Configuration
+### ✅ Network APIs
+- **Quality of Service on Demand (QoD)**: Autonomous QoS optimization
+- **Network Slice Management**: Dynamic slice allocation
 
-Each service includes:
-- Producer factory with JSON serialization
-- Consumer factory with JSON deserialization
-- Kafka template for sending messages
-- Listener container factory for receiving messages
+### ✅ Location APIs
+- **Location Verification**: Real-time location verification
+- **Geofencing**: Geofence monitoring and alerts
+- **Population Density**: Analysis via location data
 
-### Nokia Network as Code Client
+### ✅ Identity & Security APIs
+- **Number Verification**: Phone number validation
+- **SIM Swap Detection**: Automatic detection and response
+- **Device Status**: Real-time device health monitoring
 
-Each service has a `NokiaNacClient` service that:
-- Handles authentication with Bearer tokens
-- Implements retry logic (configurable, default: 3 attempts)
-- Provides type-safe methods for API calls
-- Handles timeouts and error scenarios
+### ✅ Network Insights
+- **Congestion Data**: Network congestion monitoring
+- **Device Reachability**: Connectivity and reachability tracking
+
+## Use Cases
+
+### 1. Smart Cities (Infrastructure Reporting - CityCare-like)
+**Agent**: Smart City Agent  
+**Features**:
+- Monitors city infrastructure devices (traffic lights, sensors, cameras)
+- Automatic QoS boost for critical infrastructure
+- Location verification for asset tracking
+- Infrastructure health reporting
+
+### 2. Emergency Connectivity
+**Agent**: Emergency Connectivity Agent  
+**Features**:
+- Automatic emergency mode activation
+- Maximum QoS priority allocation
+- Device reachability verification
+- Network congestion monitoring
+
+### 3. Healthcare - Remote Patient Monitoring
+**Agent**: Healthcare Monitoring Agent  
+**Features**:
+- Low-latency QoS for real-time monitoring
+- Device status verification for patient safety
+- Location verification
+- Reliable connectivity guarantees
+
+### 4. Transportation & Event Logistics
+**Agent**: Transportation Agent  
+**Features**:
+- Vehicle/asset location tracking
+- Geofencing for logistics
+- QoS optimization for moving vehicles
+- Device status monitoring
+
+### 5. Public Safety & Sustainability
+**Agent**: Public Safety Agent  
+**Features**:
+- Public safety device monitoring
+- Network resource optimization for sustainability
+- Population density analysis
+- Incident response connectivity
+
+## Configuration
+
+### Application Properties
+
+Each service has its own `application.yaml` with:
+- Database configuration (PostgreSQL, MongoDB)
+- Kafka configuration
+- OAuth2 security settings
+- Nokia Network as Code API settings
+- Service-specific configurations
+
+### AI Agent Configuration
+
+```yaml
+ai:
+  agents:
+    enabled: true
+    execution-interval: 30  # seconds
+    max-concurrent-agents: 10
+    decision-engine:
+      type: rule-based
+      confidence-threshold: 0.7
+    data-collection:
+      interval: 10  # seconds
+      retention-days: 30
+```
+
+### Nokia Network as Code Configuration
+
+```yaml
+nokia:
+  nac:
+    base-url: https://network-as-code.p-eu.rapidapi.com
+    rapidapi-key: your-rapidapi-key-here
+    rapidapi-host: network-as-code.nokia.rapidapi.com
+    timeout: 30000
+    retry-attempts: 3
+```
 
 ## Security
 
-- API Gateway implements OAuth2 Resource Server with JWT validation
-- All microservices use Spring Security
-- JWT tokens are validated at the gateway level
-- Circuit breakers protect against cascading failures
+- **OAuth2 Authorization Server**: Auth Service acts as OAuth2 provider
+- **JWT Tokens**: All services validate JWT tokens
+- **API Gateway Security**: Centralized authentication and authorization
+- **Circuit Breakers**: Resilience4j circuit breakers protect against failures
 
 ## Monitoring
 
-- Spring Boot Actuator endpoints available at `/actuator`
-- Prometheus metrics at `/actuator/prometheus`
-- Health checks at `/actuator/health`
-- Gateway routes monitoring at `/actuator/gateway/routes`
+- **Spring Boot Actuator**: Health checks and metrics
+- **Prometheus**: Metrics export for monitoring
+- **Agent Execution History**: Track agent performance
+- **Network Data Collection**: Real-time network metrics
 
 ## Circuit Breakers
 
-Resilience4j circuit breakers are configured for:
-- Connectivity Service
-- Identification Service
-- Location Service
-- Device Management Service
-
-Configuration:
+Resilience4j circuit breakers are configured for all services:
 - Sliding window size: 10
 - Minimum number of calls: 5
 - Failure rate threshold: 50%
 - Wait duration in open state: 5 seconds
 
-## Development Notes
+## Development
+
+### Project Structure
+
+```
+5GServicePlatform/
+├── apiGateway/              # API Gateway service
+├── auth-service/            # OAuth2 Authorization Server
+├── connectivityService/     # QoS and Network Slice Management
+├── identification-service/  # Number Verification, Device Status
+├── locationService/         # Location Verification, Geofencing
+├── deviceManagementService/ # SIM Swap, Device Swap
+└── ai-agent-service/        # Intelligent AI Agents ⭐
+```
+
+### Adding New Agents
+
+1. Create agent class extending `BaseAgent`
+2. Implement `doExecute()` method
+3. Register agent in `AgentOrchestrationService`
+4. Configure agent priority and execution interval
+
+Example:
+```java
+@Component
+public class MyCustomAgent extends BaseAgent {
+    public MyCustomAgent() {
+        super("my-agent", "My Agent", "Description");
+        setPriority(5);
+        setExecutionInterval(30);
+    }
+    
+    @Override
+    protected AgentResult doExecute(AgentContext context) {
+        // Your agent logic here
+    }
+}
+```
 
 ### Adding New Nokia API Endpoints
 
-1. Add endpoint configuration to `application.yaml`:
-```yaml
-nokia:
-  nac:
-    your-service:
-      endpoint: /v1/your-service/endpoint
-```
-
-2. Add method to `NokiaNacClient`:
-```java
-public Mono<Map<String, Object>> yourMethod(Map<String, Object> request) {
-    return webClient.post()
-            .uri(baseUrl + "/v1/your-service/endpoint")
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-            .bodyValue(request)
-            .retrieve()
-            .bodyToMono(Map.class)
-            .cast(Map.class)
-            .map(map -> (Map<String, Object>) map)
-            .retryWhen(Retry.fixedDelay(retryAttempts, Duration.ofSeconds(2)))
-            .timeout(Duration.ofSeconds(30));
-}
-```
+1. Add endpoint configuration to `application.yaml`
+2. Add method to `NokiaNacClient` service
+3. Use in agents via `InternalServiceClient`
 
 ## Troubleshooting
 
@@ -297,13 +424,65 @@ public Mono<Map<String, Object>> yourMethod(Map<String, Object> request) {
 - Review gateway logs at `/actuator/gateway/routes`
 
 ### Nokia API calls failing
-- Verify API key is correct
+- Verify API key is correct in `application.yaml`
 - Check network connectivity
 - Review retry configuration
 - Check Nokia API documentation for endpoint changes
 
+### Agent execution issues
+- Check agent is enabled: `GET /ai-agents/agents/{agentId}`
+- Verify network data collection is working
+- Review agent execution logs
+- Check decision engine confidence threshold
+
+## Performance
+
+- **Agent Execution**: 10-30 seconds per agent
+- **Network Data Collection**: 10 seconds interval
+- **API Response Time**: < 500ms average
+- **Concurrent Agents**: Up to 10 agents per device
+
+## Future Enhancements
+
+1. **Machine Learning Integration**
+   - Train models on historical network data
+   - Predict network issues before they occur
+   - Optimize agent decision-making
+
+2. **Advanced Coordination**
+   - Multi-agent collaboration
+   - Conflict resolution
+   - Priority-based scheduling
+
+3. **Extended Agent Types**
+   - Security/Threat Detection Agent
+   - Capacity Planning Agent
+   - Cost Optimization Agent
+
+4. **Real-Time Streaming**
+   - Kafka integration for real-time events
+   - Event-driven agent execution
+   - Stream processing for network data
+
 ## License
 
 This project is part of the Smart 5G Service Platform.
-# 5gServicePlatform
-# 5gServicePlatform
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## Support
+
+For issues and questions:
+- Check the troubleshooting section
+- Review service logs
+- Check API Gateway routes
+- Verify agent execution history
+
+---
+
+**Built with ❤️ using Nokia Network as Code APIs**
