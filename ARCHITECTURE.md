@@ -1,0 +1,726 @@
+# Smart 5G Service Platform - Architecture Documentation
+
+## Table of Contents
+
+1. [System Overview](#system-overview)
+2. [Architecture Principles](#architecture-principles)
+3. [Microservices Architecture](#microservices-architecture)
+4. [Component Architecture](#component-architecture)
+5. [Data Flow](#data-flow)
+6. [Technology Stack](#technology-stack)
+7. [Security Architecture](#security-architecture)
+8. [Communication Patterns](#communication-patterns)
+9. [Data Architecture](#data-architecture)
+10. [AI Agent Architecture](#ai-agent-architecture)
+11. [Deployment Architecture](#deployment-architecture)
+12. [Scalability & Performance](#scalability--performance)
+13. [Integration Points](#integration-points)
+
+## System Overview
+
+The Smart 5G Service Platform is a **microservices-based architecture** that leverages Nokia's Network as Code APIs to provide intelligent, autonomous network management through AI agents.
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Client Applications                       │
+│              (Web, Mobile, IoT Devices, APIs)                   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      API Gateway (8080)                          │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  • Routing & Load Balancing                              │   │
+│  │  • OAuth2 JWT Validation                                 │   │
+│  │  • Rate Limiting                                         │   │
+│  │  • Circuit Breakers                                      │   │
+│  │  • Request/Response Transformation                       │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+        ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Auth       │    │ Connectivity │    │Identification│
+│  Service     │    │   Service    │    │   Service    │
+│   (8085)     │    │   (8081)     │    │   (8082)     │
+└──────────────┘    └──────────────┘    └──────────────┘
+        │                    │                    │
+        ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  Location    │    │   Device     │    │   AI Agent   │
+│  Service     │    │ Management   │    │   Service    │
+│  (8083)      │    │  Service     │    │   (8086)     │
+└──────────────┘    └──────────────┘    └──────────────┘
+        │                    │                    │
+        └────────────────────┼────────────────────┘
+                             │
+                             ▼
+        ┌────────────────────────────────────┐
+        │   External Services & APIs          │
+        │  • Nokia Network as Code (RapidAPI)│
+        │  • Third-party Services             │
+        └────────────────────────────────────┘
+```
+
+## Architecture Principles
+
+### 1. Microservices Architecture
+- **Service Independence**: Each service can be developed, deployed, and scaled independently
+- **Single Responsibility**: Each service has a focused, well-defined purpose
+- **API-First Design**: Services communicate via well-defined REST APIs
+- **Stateless Services**: Services maintain no session state, enabling horizontal scaling
+
+### 2. Domain-Driven Design
+- Services are organized around business domains:
+  - **Authentication Domain**: Auth Service
+  - **Connectivity Domain**: Connectivity Service
+  - **Identity Domain**: Identification Service
+  - **Location Domain**: Location Service
+  - **Device Domain**: Device Management Service
+  - **Intelligence Domain**: AI Agent Service
+
+### 3. Event-Driven Architecture
+- **Kafka Messaging**: Asynchronous communication between services
+- **Event Sourcing**: Services publish events for state changes
+- **Event Consumers**: Services subscribe to relevant events
+
+### 4. Security-First
+- **OAuth2 Authorization Server**: Centralized authentication
+- **JWT Tokens**: Stateless authentication across services
+- **API Gateway Security**: Single point of authentication
+- **Service-to-Service Security**: Internal service authentication
+
+### 5. Resilience & Reliability
+- **Circuit Breakers**: Prevent cascading failures
+- **Retry Mechanisms**: Automatic retry for transient failures
+- **Health Checks**: Continuous service health monitoring
+- **Graceful Degradation**: Services continue operating with reduced functionality
+
+## Microservices Architecture
+
+### Service Breakdown
+
+#### 1. API Gateway (Port 8080)
+**Purpose**: Single entry point for all client requests
+
+**Responsibilities**:
+- Request routing to appropriate microservices
+- Authentication and authorization (OAuth2 JWT validation)
+- Rate limiting and throttling
+- Request/response transformation
+- Circuit breaker implementation
+- Load balancing
+
+**Technology**: Spring Cloud Gateway
+
+**Key Features**:
+- Dynamic routing configuration
+- Resilience4j circuit breakers
+- Request rate limiting
+- JWT token validation
+
+#### 2. Auth Service (Port 8085)
+**Purpose**: OAuth2 Authorization Server and user management
+
+**Responsibilities**:
+- User registration and authentication
+- OAuth2 token generation (access tokens, refresh tokens)
+- JWT signing and validation
+- User profile management
+- JWK Set endpoint for token validation
+
+**Technology**: Spring Boot OAuth2 Authorization Server
+
+**Key Features**:
+- RSA key pair generation for JWT signing
+- OpenID Connect Discovery endpoint
+- User entity with extended fields for Network APIs
+- Password encryption (BCrypt)
+
+#### 3. Connectivity Service (Port 8081)
+**Purpose**: Network connectivity and QoS management
+
+**Responsibilities**:
+- Quality of Service on Demand (QoD) management
+- Network slice management
+- Connectivity status monitoring
+- QoS profile management
+
+**Technology**: Spring Boot, WebClient
+
+**Key Features**:
+- Nokia Network as Code API integration
+- QoS request processing
+- Network slice allocation
+- Real-time connectivity monitoring
+
+#### 4. Identification Service (Port 8082)
+**Purpose**: Identity verification and device management
+
+**Responsibilities**:
+- Phone number verification
+- Know Your Customer (KYC) checks
+- Device status monitoring
+- SIM swap detection
+
+**Technology**: Spring Boot, WebClient
+
+**Key Features**:
+- Number verification via Nokia APIs
+- Device status tracking
+- SIM swap detection and alerts
+- KYC compliance checks
+
+#### 5. Location Service (Port 8083)
+**Purpose**: Location-based services
+
+**Responsibilities**:
+- Location verification
+- Geofencing management
+- Population density analysis
+- Location tracking
+
+**Technology**: Spring Boot, WebClient
+
+**Key Features**:
+- Real-time location retrieval
+- Geofence creation and monitoring
+- Location accuracy validation
+- Population density calculations
+
+#### 6. Device Management Service (Port 8084)
+**Purpose**: Device and SIM card management
+
+**Responsibilities**:
+- SIM card swap operations
+- Device swap operations
+- Device lifecycle management
+- SIM card tracking
+
+**Technology**: Spring Boot, WebClient
+
+**Key Features**:
+- SIM swap via Nokia APIs
+- Device swap management
+- Device inventory tracking
+- Swap history and audit
+
+#### 7. AI Agent Service (Port 8086) ⭐
+**Purpose**: Intelligent autonomous agents for network optimization
+
+**Responsibilities**:
+- Autonomous network monitoring
+- Intelligent decision making
+- Automatic QoS optimization
+- Multi-agent orchestration
+- Real-time network data collection
+
+**Technology**: Spring Boot, WebClient, Reactive Programming
+
+**Key Features**:
+- 9 specialized AI agents
+- Rule-based decision engine
+- Real-time network data collection
+- Agent orchestration and coordination
+- Execution history tracking
+
+## Component Architecture
+
+### AI Agent Service - Detailed Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AI Agent Service                          │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │           Agent Orchestration Service                │   │
+│  │  • Agent lifecycle management                        │   │
+│  │  • Execution scheduling                              │   │
+│  │  • Priority-based coordination                      │   │
+│  │  • History tracking                                  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                          │                                   │
+│        ┌─────────────────┼─────────────────┐               │
+│        │                 │                 │                 │
+│        ▼                 ▼                 ▼                 │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
+│  │  Agent   │    │  Agent   │    │  Agent   │              │
+│  │  Pool    │    │  Pool    │    │  Pool    │              │
+│  └──────────┘    └──────────┘    └──────────┘              │
+│        │                 │                 │                 │
+│        └─────────────────┼─────────────────┘                 │
+│                          │                                   │
+│                          ▼                                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         Decision Engine                              │   │
+│  │  • Rule-based decision making                        │   │
+│  │  • Confidence scoring                                │   │
+│  │  • Action recommendation                             │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                          │                                   │
+│                          ▼                                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │      Network Data Collection Service                  │   │
+│  │  • Real-time data collection                         │   │
+│  │  • Nokia API integration                             │   │
+│  │  • Internal service integration                      │   │
+│  │  • Data caching                                      │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                          │                                   │
+│        ┌─────────────────┼─────────────────┐                 │
+│        │                 │                 │                 │
+│        ▼                 ▼                 ▼                 │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐              │
+│  │ Internal │    │  Nokia   │    │  Kafka   │              │
+│  │ Services │    │   APIs   │    │ Messaging│              │
+│  │  Client  │    │  Client  │    │          │              │
+│  └──────────┘    └──────────┘    └──────────┘              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Agent Types
+
+1. **QoS Optimization Agent** - Priority 8
+2. **Network Monitoring Agent** - Priority 7
+3. **Location Verification Agent** - Priority 6
+4. **Device Management Agent** - Priority 5
+5. **Smart City Agent** - Priority 9
+6. **Emergency Connectivity Agent** - Priority 10
+7. **Healthcare Monitoring Agent** - Priority 9
+8. **Transportation Agent** - Priority 7
+9. **Public Safety Agent** - Priority 8
+
+## Data Flow
+
+### Request Flow
+
+```
+Client Request
+    │
+    ▼
+API Gateway (JWT Validation)
+    │
+    ▼
+Service Routing
+    │
+    ├──► Auth Service (if auth endpoint)
+    ├──► Connectivity Service
+    ├──► Identification Service
+    ├──► Location Service
+    ├──► Device Management Service
+    └──► AI Agent Service
+    │
+    ▼
+Service Processing
+    │
+    ├──► Database Operations (PostgreSQL)
+    ├──► External API Calls (Nokia APIs)
+    └──► Event Publishing (Kafka)
+    │
+    ▼
+Response to Client
+```
+
+### AI Agent Execution Flow
+
+```
+Agent Orchestration Service
+    │
+    ▼
+Collect Network Data
+    │
+    ├──► Nokia Location API
+    ├──► Internal Connectivity Service
+    ├──► Internal Identification Service
+    └──► Internal Location Service
+    │
+    ▼
+Create Agent Context
+    │
+    ▼
+Execute Agents (Priority-based)
+    │
+    ├──► QoS Optimization Agent
+    ├──► Network Monitoring Agent
+    ├──► Location Verification Agent
+    ├──► Device Management Agent
+    ├──► Smart City Agent
+    ├──► Emergency Connectivity Agent
+    ├──► Healthcare Monitoring Agent
+    ├──► Transportation Agent
+    └──► Public Safety Agent
+    │
+    ▼
+Decision Engine Analysis
+    │
+    ▼
+Execute Actions
+    │
+    ├──► QoS Adjustments
+    ├──► Location Verification
+    ├──► Device Swaps
+    └──► Service Notifications
+    │
+    ▼
+Store Results & History
+    │
+    ▼
+Return Agent Results
+```
+
+## Technology Stack
+
+### Backend Framework
+- **Spring Boot 4.0.2**: Main framework
+- **Java 21**: Programming language
+- **Spring WebFlux**: Reactive programming for WebClient
+
+### API Gateway
+- **Spring Cloud Gateway**: API routing and gateway functionality
+- **Resilience4j**: Circuit breakers and resilience patterns
+
+### Security
+- **Spring Security**: Security framework
+- **OAuth2 Authorization Server**: Authentication and authorization
+- **JWT (JSON Web Tokens)**: Stateless authentication
+- **Nimbus JOSE JWT**: JWT library
+
+### Databases
+- **PostgreSQL**: Relational database for business data
+- **MongoDB**: Document database for logs and telemetry
+
+### Messaging
+- **Apache Kafka**: Event streaming and messaging
+- **Spring Kafka**: Kafka integration
+
+### HTTP Clients
+- **WebClient**: Reactive HTTP client for external APIs
+- **RestTemplate**: (Legacy, being replaced by WebClient)
+
+### Monitoring & Observability
+- **Spring Boot Actuator**: Health checks and metrics
+- **Prometheus**: Metrics collection
+- **Micrometer**: Metrics abstraction
+
+### Build & Dependency Management
+- **Gradle**: Build automation
+- **Java 21**: Language version
+
+### External APIs
+- **Nokia Network as Code APIs**: Via RapidAPI
+- **RapidAPI**: API marketplace integration
+
+## Security Architecture
+
+### Authentication Flow
+
+```
+┌──────────┐         ┌──────────────┐         ┌─────────────┐
+│  Client  │────────►│ API Gateway  │────────►│ Auth Service│
+└──────────┘         └──────────────┘         └─────────────┘
+     │                      │                         │
+     │                      │                         │
+     │  1. Register/Login   │                         │
+     │◄─────────────────────┼─────────────────────────┤
+     │                      │                         │
+     │  2. JWT Token        │                         │
+     │──────────────────────►                         │
+     │                      │                         │
+     │  3. API Request      │                         │
+     │     + JWT Token      │                         │
+     │──────────────────────►                         │
+     │                      │                         │
+     │                      │  4. Validate Token      │
+     │                      │─────────────────────────►
+     │                      │                         │
+     │                      │  5. Token Valid        │
+     │                      │◄─────────────────────────┤
+     │                      │                         │
+     │  6. Forward Request  │                         │
+     │                      │─────────────────────────►
+     │                      │                         │
+     │  7. Service Response │                         │
+     │◄──────────────────────┼─────────────────────────┤
+     │                      │                         │
+```
+
+### Security Layers
+
+1. **API Gateway Layer**
+   - JWT token validation
+   - Rate limiting
+   - Request filtering
+
+2. **Service Layer**
+   - OAuth2 Resource Server configuration
+   - Service-to-service authentication
+   - Role-based access control (if needed)
+
+3. **Data Layer**
+   - Database connection encryption
+   - Credential encryption
+   - Secure configuration management
+
+### Security Features
+
+- **OAuth2 Authorization Server**: Centralized authentication
+- **JWT Tokens**: Stateless, secure token-based authentication
+- **RSA Key Pair**: Secure JWT signing
+- **Password Encryption**: BCrypt hashing
+- **HTTPS Ready**: Configuration for TLS/SSL
+- **API Key Management**: Secure storage of external API keys
+
+## Communication Patterns
+
+### Synchronous Communication
+
+1. **REST APIs**: HTTP/HTTPS for service-to-service communication
+2. **WebClient**: Reactive HTTP client for external API calls
+3. **API Gateway**: Centralized routing and communication
+
+### Asynchronous Communication
+
+1. **Kafka Topics**: Event-driven messaging
+   - Service events
+   - Agent execution events
+   - Network data events
+
+2. **Event Publishing**: Services publish events for state changes
+3. **Event Consumption**: Services subscribe to relevant events
+
+### External Communication
+
+1. **Nokia Network as Code APIs**: Via RapidAPI
+   - Location Retrieval API
+   - Number Verification API
+   - QoS Management API
+   - Device Status API
+
+2. **WebClient Configuration**: 
+   - Separate clients for internal and external services
+   - Automatic header injection (RapidAPI keys)
+   - Retry mechanisms
+   - Timeout handling
+
+## Data Architecture
+
+### Database Strategy
+
+#### PostgreSQL (Relational Data)
+- **Purpose**: Business data, user data, service entities
+- **Services Using**: All services
+- **Schema**: Domain-specific schemas per service
+- **Connection Pooling**: HikariCP
+
+#### MongoDB (Document Store)
+- **Purpose**: Logs, telemetry, agent execution history
+- **Services Using**: All services
+- **Collections**: Service-specific collections
+- **Indexing**: Optimized for query performance
+
+### Data Models
+
+#### User Entity (Auth Service)
+- Extended fields for Network APIs:
+  - Phone number, device IMEI, SIM card number
+  - KYC information
+  - Location data
+  - Device information
+  - Network preferences
+
+#### Network Data (AI Agent Service)
+- Connectivity metrics
+- Location data
+- Device status
+- QoS metrics
+- Historical data
+
+### Data Flow
+
+```
+Service Operations
+    │
+    ├──► PostgreSQL (Business Data)
+    │       • User data
+    │       • Service entities
+    │       • Configuration
+    │
+    └──► MongoDB (Telemetry)
+            • Logs
+            • Agent execution history
+            • Network metrics
+            • Event logs
+```
+
+## AI Agent Architecture
+
+### Agent Framework
+
+```
+Agent Interface
+    │
+    ├──► getId()
+    ├──► getName()
+    ├──► getDescription()
+    ├──► getPriority()
+    ├──► isEnabled()
+    ├──► shouldExecute()
+    ├──► execute()
+    └──► getExecutionInterval()
+```
+
+### Base Agent Implementation
+
+- **BaseAgent**: Abstract base class
+- **Common Functionality**:
+  - Execution lifecycle management
+  - Error handling
+  - Logging
+  - Metrics collection
+
+### Agent Execution Model
+
+1. **Context Creation**: AgentContext with network data
+2. **Should Execute Check**: Conditional execution logic
+3. **Agent Execution**: doExecute() method
+4. **Decision Making**: DecisionEngine analysis
+5. **Action Execution**: Service calls via InternalServiceClient
+6. **Result Generation**: AgentResult with actions and recommendations
+
+### Decision Engine
+
+- **Rule-Based Logic**: Configurable rules for decision making
+- **Confidence Scoring**: 0.0 to 1.0 confidence levels
+- **Action Recommendations**: Suggested actions based on analysis
+- **Threshold Configuration**: Configurable confidence thresholds
+
+## Deployment Architecture
+
+### Container Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│              Load Balancer                       │
+└────────────────────┬────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────┐
+│            API Gateway (Cluster)                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │ Gateway  │  │ Gateway  │  │ Gateway  │     │
+│  │ Instance │  │ Instance │  │ Instance │     │
+│  └──────────┘  └──────────┘  └──────────┘     │
+└────────────────────┬────────────────────────────┘
+                     │
+    ┌────────────────┼────────────────┐
+    │                │                │
+    ▼                ▼                ▼
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│ Service │    │ Service │    │ Service │
+│ Cluster │    │ Cluster │    │ Cluster │
+└─────────┘    └─────────┘    └─────────┘
+    │                │                │
+    └────────────────┼────────────────┘
+                     │
+        ┌────────────┼────────────┐
+        │            │            │
+        ▼            ▼            ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│PostgreSQL│  │ MongoDB  │  │  Kafka   │
+│ Cluster  │  │ Cluster  │  │ Cluster  │
+└──────────┘  └──────────┘  └──────────┘
+```
+
+### Deployment Options
+
+1. **Docker Containers**: Each service containerized
+2. **Kubernetes**: Orchestration and scaling
+3. **Cloud Platforms**: AWS, Azure, GCP
+4. **On-Premise**: Traditional server deployment
+
+### Service Discovery
+
+- **API Gateway**: Centralized service discovery
+- **Configuration**: Service URLs in application.yaml
+- **Future**: Service mesh integration (Istio, Linkerd)
+
+## Scalability & Performance
+
+### Horizontal Scaling
+
+- **Stateless Services**: All services are stateless, enabling horizontal scaling
+- **Load Balancing**: API Gateway distributes load
+- **Database Scaling**: PostgreSQL read replicas, MongoDB sharding
+- **Kafka Partitioning**: Event partitioning for parallel processing
+
+### Performance Optimizations
+
+1. **Connection Pooling**: HikariCP for database connections
+2. **Caching**: Network data caching in AI Agent Service
+3. **Async Processing**: Reactive programming with WebFlux
+4. **Batch Processing**: Kafka batch consumption
+5. **Circuit Breakers**: Prevent cascading failures
+
+### Resource Requirements
+
+**Per Service (Minimum)**:
+- CPU: 1-2 cores
+- Memory: 512MB - 2GB
+- Disk: 10GB
+
+**Database**:
+- PostgreSQL: 4GB RAM, 50GB disk
+- MongoDB: 2GB RAM, 100GB disk
+
+**Kafka**:
+- 2GB RAM, 50GB disk
+
+## Integration Points
+
+### External Integrations
+
+1. **Nokia Network as Code APIs**
+   - Location Retrieval API
+   - Number Verification API
+   - QoS Management API
+   - Device Status API
+   - SIM Swap API
+
+2. **RapidAPI**
+   - API key management
+   - Rate limiting
+   - API versioning
+
+### Internal Integrations
+
+1. **Service-to-Service**: REST APIs via WebClient
+2. **Event Streaming**: Kafka topics
+3. **Database**: PostgreSQL and MongoDB
+4. **Authentication**: OAuth2 JWT tokens
+
+### Integration Patterns
+
+- **API Gateway Pattern**: Single entry point
+- **Service Mesh Ready**: Can integrate with Istio/Linkerd
+- **Event-Driven**: Kafka for async communication
+- **RESTful APIs**: Standard REST for synchronous communication
+
+## Future Architecture Enhancements
+
+1. **Service Mesh**: Istio/Linkerd integration
+2. **GraphQL Gateway**: Unified API layer
+3. **Machine Learning**: ML model integration for agents
+4. **Edge Computing**: Edge deployment for low latency
+5. **Multi-Region**: Global deployment architecture
+6. **API Versioning**: Version management strategy
+7. **CQRS**: Command Query Responsibility Segregation
+8. **Event Sourcing**: Complete event sourcing implementation
+
+---
+
+**Last Updated**: 2026-01-26  
+**Version**: 1.0.0
