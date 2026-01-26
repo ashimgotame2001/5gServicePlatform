@@ -665,21 +665,6 @@ Agent Interface
 4. **Batch Processing**: Kafka batch consumption
 5. **Circuit Breakers**: Prevent cascading failures
 
-### Resource Requirements
-
-**Per Service (Minimum)**:
-- CPU: 1-2 cores
-- Memory: 512MB - 2GB
-- Disk: 10GB
-
-**Database**:
-- PostgreSQL: 4GB RAM, 50GB disk
-- MongoDB: 2GB RAM, 100GB disk
-
-**Kafka**:
-- 2GB RAM, 50GB disk
-
-## Integration Points
 
 ### External Integrations
 

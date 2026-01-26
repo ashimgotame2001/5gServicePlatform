@@ -1,4 +1,4 @@
-# Smart 5G Service Platform - Hackathon Project Idea
+# Smart 5G Service Platform 
 
 ## Project Vision
 
