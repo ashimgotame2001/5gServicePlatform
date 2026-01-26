@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/apiGateway" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/apiGateway" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/auth-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/auth-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/connectivityService" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/connectivityService" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/deviceManagementService" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/deviceManagementService" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/identification-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/identification-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/locationService" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/locationService" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

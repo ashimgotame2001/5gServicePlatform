@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/5GServicePlatform.iml" filepath="$PROJECT_DIR$/.idea/5GServicePlatform.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/apiGateway.main.iml" filepath="$PROJECT_DIR$/.idea/modules/apiGateway.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/auth-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/auth-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/connectivityService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/connectivityService.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/deviceManagementService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/deviceManagementService.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/identification-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/identification-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/locationService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/locationService.main.iml" />
+    </modules>
+  </component>
+</project>

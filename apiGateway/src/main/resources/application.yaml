@@ -1,0 +1,190 @@
+spring:
+  application:
+    name: apiGateway
+
+  # Cloud Gateway Configuration
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+            - StripPrefix=0
+        
+        - id: auth-service-jwks
+          uri: http://localhost:8085
+          predicates:
+            - Path=/.well-known/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+            - StripPrefix=0
+        
+        - id: connectivity-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/connectivity/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: connectivityCircuitBreaker
+                fallbackUri: forward:/fallback/connectivity
+            - StripPrefix=0
+        
+        - id: identification-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/identification/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: identificationCircuitBreaker
+                fallbackUri: forward:/fallback/identification
+            - StripPrefix=0
+        
+        - id: location-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/location/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: locationCircuitBreaker
+                fallbackUri: forward:/fallback/location
+            - StripPrefix=0
+        
+        - id: device-management-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/device/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: deviceCircuitBreaker
+                fallbackUri: forward:/fallback/device
+            - StripPrefix=0
+        
+        - id: ai-agent-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/ai-agents/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: aiAgentCircuitBreaker
+                fallbackUri: forward:/fallback/ai-agents
+            - StripPrefix=0
+      
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 10
+            redis-rate-limiter.burstCapacity: 20
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+            methods: GET,POST
+  
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: api-gateway-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+  
+  # OAuth2 Resource Server Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8085
+
+server:
+  port: 8080
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      authCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+      connectivityCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+      identificationCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+      locationCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+      deviceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+      aiAgentCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+
+# JWT Configuration (must match auth-service secret)
+jwt:
+  secret: smart-5g-platform-jwt-secret-key-min-256-bits-for-production-security-change-this
+  expiration: 86400000 # 24 hours
+  auth-service-url: http://localhost:8085
+
+# Logging
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
