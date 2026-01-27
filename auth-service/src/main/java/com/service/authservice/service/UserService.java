@@ -1,7 +1,7 @@
 package com.service.authservice.service;
 
-import com.service.authservice.entity.User;
-import com.service.authservice.repository.UserRepository;
+import com.service.shared.entity.User;
+import com.service.shared.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

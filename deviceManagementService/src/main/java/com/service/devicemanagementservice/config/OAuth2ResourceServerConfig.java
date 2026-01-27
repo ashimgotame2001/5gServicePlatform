@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * OAuth2 Resource Server Configuration for Device Management Service
+ * OAuth2 Resource Server Configuration for Connectivity Service
  */
 @Configuration
 @EnableWebSecurity
@@ -26,7 +26,7 @@ public class OAuth2ResourceServerConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**", "/health").permitAll()
+                        .requestMatchers("/actuator/**", "/health", "/connectivity/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -2,9 +2,7 @@ package com.service.aiagentservice.controller;
 
 import com.service.aiagentservice.agent.Agent;
 import com.service.aiagentservice.agent.model.AgentResult;
-import com.service.aiagentservice.dto.GlobalResponse;
 import com.service.aiagentservice.service.AgentOrchestrationService;
-import com.service.aiagentservice.util.ResponseHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -29,26 +27,26 @@ public class AgentController {
      * Execute all agents for a specific device
      */
     @PostMapping("/execute/{phoneNumber}")
-    public ResponseEntity<GlobalResponse<List<AgentResult>>> executeAgents(
+    public ResponseEntity<com.service.shared.dto.GlobalResponse> executeAgents(
             @PathVariable String phoneNumber) {
         log.info("Executing agents for phone number: {}", phoneNumber);
         
         List<AgentResult> results = orchestrationService.executeAgentsForDevice(phoneNumber);
         
-        return ResponseHelper.successWithData(results);
+        return com.service.shared.util.ResponseHelper.successWithData(results);
     }
     
     /**
      * Get execution history for a device
      */
     @GetMapping("/history/{phoneNumber}")
-    public ResponseEntity<GlobalResponse<List<AgentResult>>> getExecutionHistory(
+    public ResponseEntity<com.service.shared.dto.GlobalResponse> getExecutionHistory(
             @PathVariable String phoneNumber) {
         log.info("Getting execution history for phone number: {}", phoneNumber);
         
         List<AgentResult> history = orchestrationService.getExecutionHistory(phoneNumber);
         
-        return ResponseHelper.successWithData(history);
+        return com.service.shared.util.ResponseHelper.successWithData(history);
     }
     
     /**

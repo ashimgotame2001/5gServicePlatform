@@ -1,11 +1,10 @@
 package com.service.authservice.controller;
 
-import com.service.authservice.dto.GlobalResponse;
-import com.service.authservice.entity.User;
+import com.service.shared.dto.GlobalResponse;
+import com.service.shared.entity.User;
 import com.service.authservice.service.AuthService;
-import com.service.authservice.service.UserService;
-import com.service.authservice.util.JwtUtil;
-import com.service.authservice.util.ResponseHelper;
+import com.service.authservice.service.OAuth2TokenValidator;
+import com.service.shared.util.ResponseHelper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,10 +25,10 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
+    private final OAuth2TokenValidator tokenValidator;
 
     @PostMapping("/register")
-    public ResponseEntity<GlobalResponse<Map<String, Object>>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<GlobalResponse> register(@Valid @RequestBody RegisterRequest request) {
         User user = authService.register(
             request.getUsername(),
             request.getEmail(),
@@ -70,7 +70,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<GlobalResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<GlobalResponse> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request.getUsername(), request.getPassword());
 
         Map<String, Object> loginData = new HashMap<>();
@@ -82,29 +82,48 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<GlobalResponse<Map<String, Object>>> validateToken(
-            @RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    public ResponseEntity<GlobalResponse> validateToken(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseHelper.failure(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid authorization header. Expected: Bearer <token>"
+                );
+            }
+
+            String token = authHeader.substring(7).trim();
+            
+            // Validate token (signature, expiration, etc.)
+            if (!tokenValidator.validateToken(token)) {
+                return ResponseHelper.failure(
+                    HttpStatus.UNAUTHORIZED,
+                    "Token validation failed"
+                );
+            }
+            
+            // Extract claims
+            String username = tokenValidator.extractUsername(token);
+            String email = tokenValidator.extractEmail(token);
+            Date expiration = tokenValidator.extractExpiration(token);
+
+            Map<String, Object> validationData = new HashMap<>();
+            validationData.put("valid", true);
+            validationData.put("username", username);
+            validationData.put("email", email);
+            validationData.put("expiresAt", expiration.getTime());
+
+            return ResponseHelper.successWithData("Token is valid", validationData);
+        } catch (Exception e) {
             return ResponseHelper.failure(
                 HttpStatus.UNAUTHORIZED,
-                "Invalid authorization header"
+                "Token validation failed: " + e.getMessage()
             );
         }
-
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
-        String email = jwtUtil.extractEmail(token);
-
-        Map<String, Object> validationData = new HashMap<>();
-        validationData.put("valid", true);
-        validationData.put("username", username);
-        validationData.put("email", email);
-
-        return ResponseHelper.successWithData("Token is valid", validationData);
     }
 
     @GetMapping("/health")
-    public ResponseEntity<GlobalResponse<Map<String, String>>> health() {
+    public ResponseEntity<GlobalResponse> health() {
         Map<String, String> healthData = new HashMap<>();
         healthData.put("status", "UP");
         healthData.put("service", "auth-service");

@@ -25,11 +25,15 @@ repositories {
 }
 
 dependencies {
+    // Shared Module
+    implementation project(':shared-module')
+    
     // Spring Boot Core
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
     
     // OAuth2 Resource Server
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
@@ -42,6 +46,10 @@ dependencies {
     
     // MongoDB for logs/telemetry
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    
+    // Spring AOP for aspect-oriented programming
+    implementation 'org.springframework:spring-aop'
+    implementation 'org.aspectj:aspectjweaver'
     
     // Kafka for messaging
     implementation 'org.springframework.kafka:spring-kafka'

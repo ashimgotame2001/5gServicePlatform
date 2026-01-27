@@ -1,6 +1,6 @@
 package com.service.apigateway.exception;
 
-import com.service.apigateway.dto.GlobalResponse;
+import com.service.apigateway.dto.GatewayResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<GlobalResponse<Map<String, String>>> handleValidationExceptions(
+    public ResponseEntity<GatewayResponse<Map<String, String>>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         
         log.error("Validation error: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(GlobalResponse.failureWithData(
+                .body(GatewayResponse.failureWithData(
                         HttpStatus.BAD_REQUEST.value(),
                         "Validation failed",
                         errors
@@ -37,33 +37,33 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<GlobalResponse<Object>> handleIllegalArgumentException(
+    public ResponseEntity<GatewayResponse<Object>> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
         log.error("Illegal argument exception: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(GlobalResponse.failure(
+                .body(GatewayResponse.failure(
                         HttpStatus.BAD_REQUEST.value(),
                         ex.getMessage()
                 ));
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<GlobalResponse<Object>> handleRuntimeException(
+    public ResponseEntity<GatewayResponse<Object>> handleRuntimeException(
             RuntimeException ex, WebRequest request) {
         log.error("Runtime exception: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(GlobalResponse.failure(
+                .body(GatewayResponse.failure(
                         HttpStatus.INTERNAL_SERVER_ERROR.value(),
                         ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred"
                 ));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<GlobalResponse<Object>> handleGlobalException(
+    public ResponseEntity<GatewayResponse<Object>> handleGlobalException(
             Exception ex, WebRequest request) {
         log.error("Unexpected exception: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(GlobalResponse.failure(
+                .body(GatewayResponse.failure(
                         HttpStatus.INTERNAL_SERVER_ERROR.value(),
                         "An unexpected error occurred. Please try again later."
                 ));

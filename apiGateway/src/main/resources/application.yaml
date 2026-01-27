@@ -1,20 +1,31 @@
 spring:
   application:
     name: apiGateway
+  
+  web:
+    resources:
+      add-mappings: false
+    # Configure MVC to not throw exceptions for gateway routes
+    mvc:
+      throw-exception-if-no-handler-found: false
+      # Ensure gateway routes are processed before MVC
+      dispatch-options-request: true
 
-  # Cloud Gateway Configuration
   cloud:
     gateway:
+      # Enable gateway routing
+      enabled: true
       routes:
         - id: auth-service
           uri: http://localhost:8085
           predicates:
             - Path=/auth/**
           filters:
-            - name: CircuitBreaker
-              args:
-                name: authCircuitBreaker
-                fallbackUri: forward:/fallback/auth
+            # Temporarily disabled CircuitBreaker for testing
+            # - name: CircuitBreaker
+            #   args:
+            #     name: authCircuitBreaker
+            #     fallbackUri: forward:/fallback/auth
             - StripPrefix=0
         
         - id: auth-service-jwks
@@ -83,16 +94,17 @@ spring:
                 fallbackUri: forward:/fallback/ai-agents
             - StripPrefix=0
       
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 10
-            redis-rate-limiter.burstCapacity: 20
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
-            methods: GET,POST
+      # Note: RequestRateLimiter requires Redis. Commented out if Redis is not available.
+      # default-filters:
+      #   - name: RequestRateLimiter
+      #     args:
+      #       redis-rate-limiter.replenishRate: 10
+      #       redis-rate-limiter.burstCapacity: 20
+      #   - name: Retry
+      #     args:
+      #       retries: 3
+      #       statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+      #       methods: GET,POST
   
   # Kafka Configuration
   kafka:
@@ -107,7 +119,6 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
   
-  # OAuth2 Resource Server Configuration
   security:
     oauth2:
       resourceserver:
@@ -186,5 +197,7 @@ logging:
     root: INFO
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.web.servlet: DEBUG
+    org.springframework.web.servlet.function: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

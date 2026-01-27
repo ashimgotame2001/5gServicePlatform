@@ -68,7 +68,7 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 

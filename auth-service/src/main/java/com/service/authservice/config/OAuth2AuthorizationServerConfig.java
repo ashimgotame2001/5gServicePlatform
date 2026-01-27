@@ -35,23 +35,13 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.UUID;
 
-/**
- * OAuth2 Authorization Server Configuration
- * Configures the auth service as an OAuth2 Authorization Server
- * Spring Boot auto-configures OAuth2 endpoints when this dependency is present
- */
+
 @Configuration
 @EnableWebSecurity
 public class OAuth2AuthorizationServerConfig {
 
-    private final PasswordEncoder passwordEncoder;
-
     @Value("${jwt.expiration:86400000}")
     private Long jwtExpiration;
-
-    public OAuth2AuthorizationServerConfig(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Bean
     @Order(1)
@@ -84,7 +74,7 @@ public class OAuth2AuthorizationServerConfig {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository() {
+    public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
         RegisteredClient registeredClient = RegisteredClient
                 .withId(UUID.randomUUID().toString())
                 .clientId("smart-5g-client")
@@ -149,7 +139,7 @@ public class OAuth2AuthorizationServerConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.withUsername("admin")
                 .password(passwordEncoder.encode("admin"))
                 .roles("ADMIN")

@@ -1,7 +1,6 @@
 package com.service.authservice.service;
 
-import com.service.authservice.entity.User;
-import com.service.authservice.util.JwtUtil;
+import com.service.shared.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
+    private final OAuth2TokenService oAuth2TokenService;
 
     @Transactional
     public User register(String username, String email, String password,
@@ -40,6 +39,6 @@ public class AuthService {
             throw new RuntimeException("Invalid username or password");
         }
 
-        return jwtUtil.generateToken(user.getUsername(), user.getEmail());
+        return oAuth2TokenService.generateToken(user.getUsername(), user.getEmail());
     }
 }

@@ -26,7 +26,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**", "/health", "/fallback/**", "/auth/**", "/.well-known/**", "/oauth2/**").permitAll()
+                // Allow all gateway routes to be processed by the gateway first
+                .requestMatchers("/actuator/**", "/health", "/fallback/**", 
+                                "/auth/**", "/connectivity/**", "/identification/**", 
+                                "/location/**", "/device/**", "/ai-agents/**",
+                                "/.well-known/**", "/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

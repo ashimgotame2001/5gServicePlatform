@@ -21,6 +21,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
+  # Entity scan configuration
+  entity-scan:
+    base-packages: com.service.connectivityservice.entity
   
   # MongoDB Configuration (for logs/telemetry)
   # Kafka Configuration
@@ -44,8 +47,11 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:8085
+  data:
+    mongodb:
+      auto-index-creation: true
   mongodb:
-    uri: mongodb://admin:admin123@localhost:27017/smart_5g_logs?authSource=admin
+    uri: mongodb://admin:admin123@localhost:27017/smart_5g_logs?authSource=admin&directConnection=true
 
 server:
   port: 8081
@@ -54,7 +60,7 @@ server:
 nokia:
   nac:
     base-url: https://network-as-code.p-eu.rapidapi.com
-    rapidapi-key: c756043d8emsh61493e215abba9bp14ffa9jsnb20da80b8e4e
+    rapidapi-key: c5cd88f861msh99ff63cc93e6945p13e42ajsn6dee49b8bb70
     rapidapi-host: network-as-code.nokia.rapidapi.com
     timeout: 30000
     retry-attempts: 3
