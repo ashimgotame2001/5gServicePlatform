@@ -27,7 +27,24 @@ spring:
     oauth2:
       authorization-server:
         issuer-uri: http://localhost:8085
-
+  data:
+    mongodb:
+      auto-index-creation: true
+  mongodb:
+    uri: mongodb://admin:admin123@localhost:27017/smart_5g_logs?authSource=admin&directConnection=true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+    consumer:
+      group-id: connectivity-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "*"
 server:
   port: 8085
 
