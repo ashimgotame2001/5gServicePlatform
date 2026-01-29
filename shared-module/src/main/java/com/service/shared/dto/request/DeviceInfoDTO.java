@@ -1,4 +1,4 @@
-package com.service.connectivityservice.dto.request;
+package com.service.shared.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

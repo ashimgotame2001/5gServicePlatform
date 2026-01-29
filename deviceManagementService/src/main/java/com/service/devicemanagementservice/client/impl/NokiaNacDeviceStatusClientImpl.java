@@ -1,8 +1,8 @@
-package com.service.connectivityservice.client.impl;
+package com.service.devicemanagementservice.client.impl;
 
-import com.service.connectivityservice.client.NokiaNacClient;
-import com.service.connectivityservice.dto.request.CreateSessionRequestDTO;
-import com.service.connectivityservice.dto.request.DeviceRequestDTO;
+import com.service.devicemanagementservice.client.NokiaNacDeviceStatusClient;
+import com.service.shared.dto.CreateDeviceStatusSubscriptionDTO;
+import com.service.shared.dto.DeviceConnectivityStatusDTO;
 import com.service.shared.exception.GlobalException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,27 +22,28 @@ import java.util.Map;
 
 /**
  * Implementation of Nokia Network as Code API client
- * Handles Quality of Service on Demand (QoD) session management
+ * Handles Device Status and Subscription management
  */
 @Slf4j
 @Service
-public class NokiaNacClientImpl implements NokiaNacClient {
+public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClient {
 
-    private static final String QOD_SESSIONS_PATH = "/qod/v0/sessions";
+    private static final String DEVICE_STATUS_PATH = "https://device-status.p-eu.rapidapi.com/";
+    private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "connectivity";
+    private static final String ROAMING_STATUS_PATH = DEVICE_STATUS_PATH + "roaming";
+    private static final String SUBSCRIPTIONS_PATH = DEVICE_STATUS_PATH + "subscriptions";
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
 
-    @Value("${nokia.nac.base-url}")
-    private String nokiaBaseUrl;
-    @Value("${nokia.nac.rapidapi-host}")
-    private String host;
+
+    private static final String host ="device-status.nokia.rapidapi.com";
     @Value("${nokia.nac.rapidapi-key}")
     private String apiKey;
 
-    public NokiaNacClientImpl(
+    public NokiaNacDeviceStatusClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
             @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
@@ -69,7 +70,6 @@ public class NokiaNacClientImpl implements NokiaNacClient {
                 });
     }
 
-
     private boolean isRetryableError(Throwable throwable) {
         // Don't retry on client errors (4xx), deserialization errors, or illegal arguments
         if (throwable instanceof IllegalArgumentException ||
@@ -93,14 +93,21 @@ public class NokiaNacClientImpl implements NokiaNacClient {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Mono<Map<String, Object>> createSession(CreateSessionRequestDTO requestDTO) {
+    public Mono<Map<String, Object>> getDeviceConnectivityStatus(DeviceConnectivityStatusDTO status) {
+        if (status == null) {
+            return Mono.error(new GlobalException(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Device connectivity status request cannot be null"
+            ));
+        }
 
+        log.debug("Fetching device connectivity status for device: {}", status.getPhoneNumber());
 
         return webClient.post()
-                .uri(QOD_SESSIONS_PATH)
+                .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
-                .bodyValue(requestDTO)
+                .bodyValue(status)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -108,58 +115,65 @@ public class NokiaNacClientImpl implements NokiaNacClient {
                 .map(map -> (Map<String, Object>) map)
                 .timeout(timeout)
                 .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.info("QoD session created successfully: {}", result))
-                .doOnError(error -> log.error("Failed to create QoD session", error))
+                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
+                .doOnError(error -> log.error("Failed to get device connectivity status", error))
                 .onErrorMap(throwable -> {
                     if (throwable instanceof GlobalException) {
                         return throwable;
                     }
                     return new GlobalException(
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to create QoD session: " + throwable.getMessage(),
+                            "Failed to get device connectivity status: " + throwable.getMessage(),
                             throwable);
                 });
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Mono<Map<String, Object>> getSessions() {
-        log.debug("Fetching all QoD sessions");
+    public Mono<Map<String, Object>> getDeviceRoamingStatus(DeviceConnectivityStatusDTO status) {
+        if (status == null) {
+            return Mono.error(new GlobalException(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Device roaming status request cannot be null"
+            ));
+        }
+
+        log.debug("Fetching device roaming status for device: {}", status.getPhoneNumber());
+
+        return webClient.post()
+                .uri(ROAMING_STATUS_PATH)
+                .header("X-RapidAPI-Key", apiKey)
+                .header("X-RapidAPI-Host", host)
+                .bodyValue(status)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Map.class)
+                .cast(Map.class)
+                .map(map -> (Map<String, Object>) map)
+                .timeout(timeout)
+                .retryWhen(retrySpec)
+                .doOnSuccess(result -> log.info("Retrieved device roaming status successfully: {}", result))
+                .doOnError(error -> log.error("Failed to get device roaming status", error))
+                .onErrorMap(throwable -> {
+                    if (throwable instanceof GlobalException) {
+                        return throwable;
+                    }
+                    return new GlobalException(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "Failed to get device roaming status: " + throwable.getMessage(),
+                            throwable);
+                });
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Mono<Map<String, Object>> getAllSubscription() {
+        log.debug("Fetching all device status subscriptions");
 
         return webClient.get()
-                .uri(QOD_SESSIONS_PATH)
+                .uri(SUBSCRIPTIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToMono(Map.class)
-                .cast(Map.class)
-                .map(map -> (Map<String, Object>) map)
-                .timeout(timeout)
-                .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.debug("Retrieved QoD sessions: {}", result))
-                .doOnError(error -> log.error("Failed to get QoD sessions", error))
-                .onErrorMap(throwable -> {
-                    if (throwable instanceof GlobalException) {
-                        return throwable;
-                    }
-                    return new GlobalException(
-                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to get QoD sessions: " + throwable.getMessage(),
-                            throwable);
-                });
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public Mono<Map<String, Object>> retrieveSessions(DeviceRequestDTO request) {
-
-
-        return webClient.post()
-                .uri(QOD_SESSIONS_PATH)
-                .header("X-RapidAPI-Key", apiKey)
-                .header("X-RapidAPI-Host", host)
-                .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Object.class)
@@ -168,7 +182,7 @@ public class NokiaNacClientImpl implements NokiaNacClient {
                     Map<String, Object> result = new java.util.HashMap<>();
                     if (response instanceof java.util.List) {
                         // If response is an array, wrap it in a map
-                        result.put("sessions", response);
+                        result.put("subscriptions", response);
                         result.put("count", ((java.util.List<?>) response).size());
                     } else if (response instanceof Map) {
                         // If response is already a map, use it directly
@@ -183,33 +197,73 @@ public class NokiaNacClientImpl implements NokiaNacClient {
                 .map(map -> (Map<String, Object>) map)
                 .timeout(timeout)
                 .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.info("Retrieved QoD sessions successfully: {}", result))
-                .doOnError(error -> log.error("Failed to retrieve QoD sessions", error))
+                .doOnSuccess(result -> log.debug("Retrieved all subscriptions: {}", result))
+                .doOnError(error -> log.error("Failed to get all subscriptions", error))
                 .onErrorMap(throwable -> {
                     if (throwable instanceof GlobalException) {
                         return throwable;
                     }
                     return new GlobalException(
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to retrieve QoD sessions: " + throwable.getMessage(),
+                            "Failed to get all subscriptions: " + throwable.getMessage(),
                             throwable);
                 });
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Mono<Map<String, Object>> getSession(String sessionId) {
-        if (sessionId == null || sessionId.trim().isEmpty()) {
+    public Mono<Map<String, Object>> createDeviceStatusSubscription(CreateDeviceStatusSubscriptionDTO request) {
+        if (request == null) {
             return Mono.error(new GlobalException(
                     HttpStatus.BAD_REQUEST.value(),
-                    "Session ID cannot be null or empty"
+                    "Create subscription request cannot be null"
             ));
         }
 
-        log.debug("Fetching QoD session with ID: {}", sessionId);
+        log.debug("Creating device status subscription for device: {}", 
+                request.getSubscriptionDetail() != null && 
+                request.getSubscriptionDetail().getDevice() != null ?
+                request.getSubscriptionDetail().getDevice().getPhoneNumber() : "unknown");
+
+        return webClient.post()
+                .uri(SUBSCRIPTIONS_PATH)
+                .header("X-RapidAPI-Key", apiKey)
+                .header("X-RapidAPI-Host", host)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Map.class)
+                .cast(Map.class)
+                .map(map -> (Map<String, Object>) map)
+                .timeout(timeout)
+                .retryWhen(retrySpec)
+                .doOnSuccess(result -> log.info("Created device status subscription successfully: {}", result))
+                .doOnError(error -> log.error("Failed to create device status subscription", error))
+                .onErrorMap(throwable -> {
+                    if (throwable instanceof GlobalException) {
+                        return throwable;
+                    }
+                    return new GlobalException(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "Failed to create device status subscription: " + throwable.getMessage(),
+                            throwable);
+                });
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Mono<Map<String, Object>> getSubscriptionById(String subscriptionId) {
+        if (subscriptionId == null || subscriptionId.trim().isEmpty()) {
+            return Mono.error(new GlobalException(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Subscription ID cannot be null or empty"
+            ));
+        }
+
+        log.debug("Fetching subscription with ID: {}", subscriptionId);
 
         return webClient.get()
-                .uri(QOD_SESSIONS_PATH + "/{id}", sessionId)
+                .uri(SUBSCRIPTIONS_PATH + "/{id}", subscriptionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
                 .retrieve()
@@ -219,56 +273,15 @@ public class NokiaNacClientImpl implements NokiaNacClient {
                 .map(map -> (Map<String, Object>) map)
                 .timeout(timeout)
                 .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.debug("Retrieved QoD session: {}", result))
-                .doOnError(error -> log.error("Failed to get QoD session with ID: {}", sessionId, error))
+                .doOnSuccess(result -> log.debug("Retrieved subscription: {}", result))
+                .doOnError(error -> log.error("Failed to get subscription with ID: {}", subscriptionId, error))
                 .onErrorMap(throwable -> {
                     if (throwable instanceof GlobalException) {
                         return throwable;
                     }
                     return new GlobalException(
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to get QoD session: " + throwable.getMessage(),
-                            throwable);
-                });
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public Mono<Map<String, Object>> postRequest(String endpoint, Object requestBody) {
-        if (endpoint == null || endpoint.trim().isEmpty()) {
-            return Mono.error(new GlobalException(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "Endpoint cannot be null or empty"
-            ));
-        }
-        if (requestBody == null) {
-            return Mono.error(new GlobalException(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "Request body cannot be null"
-            ));
-        }
-
-        log.debug("Making POST request to endpoint: {} with body: {}", endpoint, requestBody);
-
-        return webClient.post()
-                .uri(endpoint)
-                .bodyValue(requestBody)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToMono(Map.class)
-                .cast(Map.class)
-                .map(map -> (Map<String, Object>) map)
-                .timeout(timeout)
-                .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.debug("POST request successful to endpoint: {}", endpoint))
-                .doOnError(error -> log.error("Failed to make POST request to endpoint: {}", endpoint, error))
-                .onErrorMap(throwable -> {
-                    if (throwable instanceof GlobalException) {
-                        return throwable;
-                    }
-                    return new GlobalException(
-                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to make POST request to " + endpoint + ": " + throwable.getMessage(),
+                            "Failed to get subscription: " + throwable.getMessage(),
                             throwable);
                 });
     }

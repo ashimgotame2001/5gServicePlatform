@@ -2,8 +2,8 @@ package com.service.connectivityservice.controller;
 
 import com.service.shared.annotation.MethodCode;
 import com.service.shared.dto.GlobalResponse;
-import com.service.connectivityservice.dto.request.CreateSessionRequestDTO;
-import com.service.connectivityservice.dto.request.DeviceRequestDTO;
+import com.service.shared.dto.request.CreateSessionRequestDTO;
+import com.service.shared.dto.request.DeviceRequestDTO;
 import com.service.connectivityservice.service.QosService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

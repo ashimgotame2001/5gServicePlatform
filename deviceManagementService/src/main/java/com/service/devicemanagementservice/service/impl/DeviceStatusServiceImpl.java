@@ -1,6 +1,6 @@
 package com.service.devicemanagementservice.service.impl;
 
-import com.service.devicemanagementservice.client.NokiaNacClient;
+import com.service.devicemanagementservice.client.NokiaNacDeviceStatusClient;
 import com.service.devicemanagementservice.service.DeviceStatusService;
 import com.service.shared.dto.CreateDeviceStatusSubscriptionDTO;
 import com.service.shared.dto.DeviceConnectivityStatusDTO;
@@ -20,14 +20,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DeviceStatusServiceImpl implements DeviceStatusService {
 
-    private final NokiaNacClient nokiaNacClient;
+    private final NokiaNacDeviceStatusClient nokiaNacDeviceStatusClient;
     private static final Duration BLOCK_TIMEOUT = Duration.ofSeconds(30);
 
     @Override
     @Transactional
     public GlobalResponse getDeviceConnectivityStatus(DeviceConnectivityStatusDTO status) {
         try {
-            Mono<Map<String, Object>> resMono = nokiaNacClient.getDeviceConnectivityStatus(status);
+            Mono<Map<String, Object>> resMono = nokiaNacDeviceStatusClient.getDeviceConnectivityStatus(status);
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {
@@ -51,7 +51,7 @@ public class DeviceStatusServiceImpl implements DeviceStatusService {
     @Transactional
     public GlobalResponse getDeviceRoamingStatus(DeviceConnectivityStatusDTO status) {
         try {
-            Mono<Map<String, Object>> resMono = nokiaNacClient.getDeviceRoamingStatus(status);
+            Mono<Map<String, Object>> resMono = nokiaNacDeviceStatusClient.getDeviceRoamingStatus(status);
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {
@@ -75,7 +75,7 @@ public class DeviceStatusServiceImpl implements DeviceStatusService {
     @Transactional
     public GlobalResponse getAllSubscriptions() {
         try {
-            Mono<Map<String, Object>> resMono = nokiaNacClient.getAllSubscription();
+            Mono<Map<String, Object>> resMono = nokiaNacDeviceStatusClient.getAllSubscription();
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {
@@ -99,7 +99,7 @@ public class DeviceStatusServiceImpl implements DeviceStatusService {
     @Transactional
     public GlobalResponse createDeviceStatusSubscription(CreateDeviceStatusSubscriptionDTO request) {
         try {
-            Mono<Map<String, Object>> resMono = nokiaNacClient.createDeviceStatusSubscription(request);
+            Mono<Map<String, Object>> resMono = nokiaNacDeviceStatusClient.createDeviceStatusSubscription(request);
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {
@@ -123,7 +123,7 @@ public class DeviceStatusServiceImpl implements DeviceStatusService {
     @Transactional
     public GlobalResponse getSubscriptionById(String subscriptionId) {
         try {
-            Mono<Map<String, Object>> resMono = nokiaNacClient.getSubscriptionById(subscriptionId);
+            Mono<Map<String, Object>> resMono = nokiaNacDeviceStatusClient.getSubscriptionById(subscriptionId);
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {

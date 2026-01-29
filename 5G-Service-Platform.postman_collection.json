@@ -169,7 +169,7 @@
 			"name": "Connectivity Service",
 			"item": [
 				{
-					"name": "Request QoS Adjustment",
+					"name": "QoS - Retrieve Sessions by Phone Number",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -184,24 +184,59 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\"\n  },\n  \"qosProfile\": {\n    \"name\": \"HIGH_BANDWIDTH\",\n    \"downlink\": {\n      \"guaranteedBitRate\": {\n        \"value\": 1000000000,\n        \"unit\": \"BPS\"\n      },\n      \"maximumBitRate\": {\n        \"value\": 2000000000,\n        \"unit\": \"BPS\"\n      }\n    },\n    \"uplink\": {\n      \"guaranteedBitRate\": {\n        \"value\": 500000000,\n        \"unit\": \"BPS\"\n      },\n      \"maximumBitRate\": {\n        \"value\": 1000000000,\n        \"unit\": \"BPS\"\n      }\n    }\n  },\n  \"duration\": 3600\n}"
+							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/connectivity/qos-request",
+							"raw": "{{baseUrl}}/connectivity/Qos/sessions",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"connectivity",
-								"qos-request"
+								"Qos",
+								"sessions"
 							]
 						},
-						"description": "Request Quality of Service adjustment for a device"
+						"description": "Retrieve QoS sessions by phone number"
 					},
 					"response": []
 				},
 				{
-					"name": "Get Connectivity Status",
+					"name": "QoS - Create Session",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+99999991001\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    }\n  },\n  \"applicationServer\": {\n    \"ipv4Address\": \"84.125.93.10\"\n  },\n  \"qosProfile\": \"HIGH_BANDWIDTH\",\n  \"duration\": 3600\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/connectivity/Qos/sessions/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"connectivity",
+								"Qos",
+								"sessions",
+								"create"
+							]
+						},
+						"description": "Create a new QoS session"
+					},
+					"response": []
+				},
+				{
+					"name": "QoS - Get Session by ID",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -211,23 +246,18 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/connectivity/status?requestId={{requestId}}",
+							"raw": "{{baseUrl}}/connectivity/Qos/sessions/{{sessionId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"connectivity",
-								"status"
-							],
-							"query": [
-								{
-									"key": "requestId",
-									"value": "{{requestId}}",
-									"description": "QoS request ID from previous request"
-								}
+								"Qos",
+								"sessions",
+								"{{sessionId}}"
 							]
 						},
-						"description": "Get connectivity status for a QoS request"
+						"description": "Get QoS session by session ID"
 					},
 					"response": []
 				},
@@ -257,101 +287,6 @@
 			"name": "Identification Service",
 			"item": [
 				{
-					"name": "Verify Phone Number",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"verificationCode\": \"123456\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/identification/verify-number",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"identification",
-								"verify-number"
-							]
-						},
-						"description": "Verify a phone number"
-					},
-					"response": []
-				},
-				{
-					"name": "Perform KYC Check",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"idDocumentType\": \"PASSPORT\",\n  \"idDocumentNumber\": \"A12345678\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": \"1990-01-01\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/identification/kyc-check",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"identification",
-								"kyc-check"
-							]
-						},
-						"description": "Perform Know Your Customer (KYC) verification check"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Device Status",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/identification/device-status?phoneNumber={{phoneNumber}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"identification",
-								"device-status"
-							],
-							"query": [
-								{
-									"key": "phoneNumber",
-									"value": "{{phoneNumber}}",
-									"description": "Phone number in E.164 format (e.g., +1234567890)"
-								}
-							]
-						},
-						"description": "Get device status for a phone number"
-					},
-					"response": []
-				},
-				{
 					"name": "Health Check",
 					"request": {
 						"method": "GET",
@@ -376,115 +311,6 @@
 		{
 			"name": "Location Service",
 			"item": [
-				{
-					"name": "Verify Location",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/location/verify?phoneNumber={{phoneNumber}}&latitude={{latitude}}&longitude={{longitude}}&radius={{radius}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"verify"
-							],
-							"query": [
-								{
-									"key": "phoneNumber",
-									"value": "{{phoneNumber}}",
-									"description": "Phone number in E.164 format"
-								},
-								{
-									"key": "latitude",
-									"value": "{{latitude}}",
-									"description": "Latitude coordinate"
-								},
-								{
-									"key": "longitude",
-									"value": "{{longitude}}",
-									"description": "Longitude coordinate"
-								},
-								{
-									"key": "radius",
-									"value": "{{radius}}",
-									"description": "Radius in meters (default: 100)"
-								}
-							]
-						},
-						"description": "Verify if a device is at a specific location"
-					},
-					"response": []
-				},
-				{
-					"name": "Retrieve Location",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\"\n  },\n  \"maxAge\": 60\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/location/retrieve",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"retrieve"
-							]
-						},
-						"description": "Retrieve current location of a device"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Geofence Alerts",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/location/geofence-alerts?phoneNumber={{phoneNumber}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"geofence-alerts"
-							],
-							"query": [
-								{
-									"key": "phoneNumber",
-									"value": "{{phoneNumber}}",
-									"description": "Phone number in E.164 format"
-								}
-							]
-						},
-						"description": "Get geofence alerts for a device"
-					},
-					"response": []
-				},
 				{
 					"name": "Health Check",
 					"request": {
@@ -511,7 +337,7 @@
 			"name": "Device Management Service",
 			"item": [
 				{
-					"name": "Swap SIM Card",
+					"name": "Device Status - Get Connectivity Status",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -526,24 +352,25 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"oldSimCardNumber\": \"89012345678901234567\",\n  \"newSimCardNumber\": \"89012345678901234568\",\n  \"simCardType\": \"PHYSICAL\"\n}"
+							"raw": "{\n  \"phoneNumber\": \"123456789\",\n  \"networkAccessIdentifier\": \"123456789@domain.com\",\n  \"ipv4Address\": {\n    \"publicAddress\": \"84.125.93.10\",\n    \"privateAddress\": \"84.125.93.10\",\n    \"publicPort\": 0\n  },\n  \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/device/swap-sim",
+							"raw": "{{baseUrl}}/device/status/connectivity",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"device",
-								"swap-sim"
+								"status",
+								"connectivity"
 							]
 						},
-						"description": "Swap SIM card for a device"
+						"description": "Get device connectivity status"
 					},
 					"response": []
 				},
 				{
-					"name": "Swap Device",
+					"name": "Device Status - Get Roaming Status",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -558,19 +385,167 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"oldDeviceImei\": \"123456789012345\",\n  \"newDeviceImei\": \"123456789012346\",\n  \"deviceModel\": \"iPhone 15\",\n  \"deviceManufacturer\": \"Apple\",\n  \"deviceOs\": \"iOS\",\n  \"deviceOsVersion\": \"17.1\"\n}"
+							"raw": "{\n  \"phoneNumber\": \"123456789\",\n  \"networkAccessIdentifier\": \"123456789@domain.com\",\n  \"ipv4Address\": {\n    \"publicAddress\": \"84.125.93.10\",\n    \"privateAddress\": \"84.125.93.10\",\n    \"publicPort\": 0\n  },\n  \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/device/swap-device",
+							"raw": "{{baseUrl}}/device/status/roaming",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"device",
-								"swap-device"
+								"status",
+								"roaming"
 							]
 						},
-						"description": "Swap device for a phone number"
+						"description": "Get device roaming status"
+					},
+					"response": []
+				},
+				{
+					"name": "Device Status - Get All Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/device/subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device",
+								"subscriptions"
+							]
+						},
+						"description": "Get all device status subscriptions"
+					},
+					"response": []
+				},
+				{
+					"name": "Device Status - Create Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subscriptionDetail\": {\n    \"device\": {\n      \"phoneNumber\": \"123456789\",\n      \"networkAccessIdentifier\": \"123456789@domain.com\",\n      \"ipv4Address\": {\n        \"publicAddress\": \"84.125.93.10\",\n        \"privateAddress\": \"84.125.93.10\",\n        \"publicPort\": 0\n      },\n      \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n    },\n    \"type\": \"org.camaraproject.device-status.v0.roaming-status\"\n  },\n  \"subscriptionExpireTime\": \"2023-01-17T13:18:23.682Z\",\n  \"webhook\": {\n    \"notificationUrl\": \"https://application-server.com\",\n    \"notificationAuthToken\": \"c8974e592c2fa383d4a3960714\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/device/subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device",
+								"subscriptions"
+							]
+						},
+						"description": "Create device status subscription"
+					},
+					"response": []
+				},
+				{
+					"name": "Device Status - Get Subscription by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/device/subscriptions/{{subscriptionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device",
+								"subscriptions",
+								"{{subscriptionId}}"
+							]
+						},
+						"description": "Get subscription by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Device Swap - Retrieve Swap Date",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/device/swap/retrieve-date",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device",
+								"swap",
+								"retrieve-date"
+							]
+						},
+						"description": "Retrieve device swap date"
+					},
+					"response": []
+				},
+				{
+					"name": "Device Swap - Check Device Swap",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"maxAge\": 60\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/device/swap/check",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"device",
+								"swap",
+								"check"
+							]
+						},
+						"description": "Check device swap status"
 					},
 					"response": []
 				},
@@ -594,7 +569,7 @@
 					"response": []
 				}
 			],
-			"description": "SIM card and device swap management endpoints"
+			"description": "Device status, subscriptions, and device swap management endpoints"
 		},
 		{
 			"name": "AI Agent Service",
@@ -859,7 +834,12 @@
 			"type": "string"
 		},
 		{
-			"key": "requestId",
+			"key": "sessionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "subscriptionId",
 			"value": "",
 			"type": "string"
 		},

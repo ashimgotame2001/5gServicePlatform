@@ -1,9 +1,9 @@
 package com.service.connectivityservice.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.service.connectivityservice.client.NokiaNacClient;
-import com.service.connectivityservice.dto.request.CreateSessionRequestDTO;
-import com.service.connectivityservice.dto.request.DeviceRequestDTO;
+import com.service.connectivityservice.client.NokiaNacQosClient;
+import com.service.shared.dto.request.CreateSessionRequestDTO;
+import com.service.shared.dto.request.DeviceRequestDTO;
 import com.service.connectivityservice.service.QosService;
 import com.service.connectivityservice.util.JwtTokenUtil;
 import com.service.shared.dto.GlobalResponse;
@@ -22,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class QosServiceImpl implements QosService {
 
-    private final NokiaNacClient nokiaNacClient;
+    private final NokiaNacQosClient nokiaNacQosClient;
     private final JwtTokenUtil jwtTokenUtil;
     private final ObjectMapper objectMapper;
     private static final Duration BLOCK_TIMEOUT = Duration.ofSeconds(30);
@@ -33,7 +33,7 @@ public class QosServiceImpl implements QosService {
 
 
         try {
-            Mono<Map<String, Object>> resMono = nokiaNacClient.retrieveSessions(request);
+            Mono<Map<String, Object>> resMono = nokiaNacQosClient.retrieveSessions(request);
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {
@@ -60,7 +60,7 @@ public class QosServiceImpl implements QosService {
 
         try {
             // Convert DTO to Map for API call
-            Mono<Map<String, Object>> resMono = nokiaNacClient.createSession(requestDTO);
+            Mono<Map<String, Object>> resMono = nokiaNacQosClient.createSession(requestDTO);
             Map<String, Object> response = resMono.block(BLOCK_TIMEOUT);
 
             if (response == null) {
@@ -83,7 +83,7 @@ public class QosServiceImpl implements QosService {
 
     @Override
     public GlobalResponse getSession(String sessionId) {
-        Mono<Map<String, Object>> res = nokiaNacClient.getSession(sessionId);
+        Mono<Map<String, Object>> res = nokiaNacQosClient.getSession(sessionId);
         Map<String, Object> response = res.block(BLOCK_TIMEOUT);
         if (response == null) {
             return GlobalResponse.failure(

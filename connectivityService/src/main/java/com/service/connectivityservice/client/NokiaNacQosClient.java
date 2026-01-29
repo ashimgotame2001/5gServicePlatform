@@ -1,12 +1,12 @@
 package com.service.connectivityservice.client;
 
-import com.service.connectivityservice.dto.request.CreateSessionRequestDTO;
-import com.service.connectivityservice.dto.request.DeviceRequestDTO;
+import com.service.shared.dto.request.CreateSessionRequestDTO;
+import com.service.shared.dto.request.DeviceRequestDTO;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-public interface NokiaNacClient {
+public interface NokiaNacQosClient {
 
     Mono<Map<String, Object>> createSession(CreateSessionRequestDTO requestDTO);
 

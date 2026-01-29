@@ -1,8 +1,8 @@
 package com.service.connectivityservice.service;
 
 
-import com.service.connectivityservice.dto.request.CreateSessionRequestDTO;
-import com.service.connectivityservice.dto.request.DeviceRequestDTO;
+import com.service.shared.dto.request.CreateSessionRequestDTO;
+import com.service.shared.dto.request.DeviceRequestDTO;
 
 public interface QosService {
 
