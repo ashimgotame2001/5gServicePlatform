@@ -4,11 +4,13 @@ import com.service.aiagentservice.agent.BaseAgent;
 import com.service.aiagentservice.agent.model.AgentAction;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +23,12 @@ import java.util.Map;
 public class SmartCityAgent extends BaseAgent {
     
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
+    
+    @Value("${services.location.base-url:http://localhost:8083}")
+    private String locationServiceUrl;
     
     public SmartCityAgent(InternalServiceClient internalServiceClient) {
         super("smart-city-agent", "Smart City Infrastructure Agent",
@@ -54,12 +62,12 @@ public class SmartCityAgent extends BaseAgent {
             log.warn("Critical infrastructure device has connectivity issues: {}", context.getPhoneNumber());
             
             // Request QoS boost for critical infrastructure
-            Map<String, Object> qosRequest = Map.of(
-                    "phoneNumber", context.getPhoneNumber(),
-                    "priority", 1, // Highest priority
-                    "bandwidth", 100.0,
-                    "reason", "Critical infrastructure - Smart City"
-            );
+            Map<String, Object> qosRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            qosRequest.put("device", device);
+            qosRequest.put("qosProfile", "HIGH_BANDWIDTH");
+            qosRequest.put("duration", 3600);
             
             AgentAction action = AgentAction.builder()
                     .actionType("QOS_BOOST")
@@ -69,7 +77,7 @@ public class SmartCityAgent extends BaseAgent {
                     .parameters(Map.of("priority", 1, "bandwidth", 100.0))
                     .build();
             
-            internalServiceClient.requestQoSAdjustment(qosRequest)
+            internalServiceClient.callService(connectivityServiceUrl, "/connectivity/Qos/sessions/create", qosRequest)
                     .subscribe(
                             result -> {
                                 action.setStatus(AgentAction.ActionStatus.SUCCESS);
@@ -89,7 +97,12 @@ public class SmartCityAgent extends BaseAgent {
         
         // Verify device location (for asset tracking)
         if (context.getNetworkData().getLocation() != null) {
-            internalServiceClient.verifyLocation(context.getPhoneNumber())
+            Map<String, Object> locationRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            locationRequest.put("device", device);
+            
+            internalServiceClient.callService(locationServiceUrl, "/location/verify/v1", locationRequest)
                     .subscribe(
                             result -> log.debug("Location verified for infrastructure device"),
                             error -> log.warn("Location verification failed", error)

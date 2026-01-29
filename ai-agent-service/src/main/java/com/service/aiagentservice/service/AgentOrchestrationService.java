@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -121,6 +120,94 @@ public class AgentOrchestrationService {
         return agents.stream()
                 .filter(agent -> agent.getId().equals(agentId))
                 .findFirst();
+    }
+    
+    /**
+     * Execute a specific agent for a device
+     */
+    public AgentResult executeAgentForDevice(String agentId, String phoneNumber) {
+        if (!agentsEnabled) {
+            log.debug("Agents are disabled, skipping execution");
+            return AgentResult.builder()
+                    .agentId(agentId)
+                    .success(false)
+                    .error("Agents are disabled")
+                    .build();
+        }
+        
+        log.info("Executing agent {} for device: {}", agentId, phoneNumber);
+        
+        Optional<Agent> agentOpt = getAgent(agentId);
+        if (agentOpt.isEmpty()) {
+            log.warn("Agent not found: {}", agentId);
+            return AgentResult.builder()
+                    .agentId(agentId)
+                    .success(false)
+                    .error("Agent not found: " + agentId)
+                    .build();
+        }
+        
+        Agent agent = agentOpt.get();
+        if (!agent.isEnabled()) {
+            log.warn("Agent {} is disabled", agentId);
+            return AgentResult.builder()
+                    .agentId(agentId)
+                    .success(false)
+                    .error("Agent is disabled")
+                    .build();
+        }
+        
+        // Collect network data
+        com.service.aiagentservice.agent.model.NetworkData networkData = dataCollectionService
+                .collectNetworkData(phoneNumber)
+                .block();
+        
+        if (networkData == null) {
+            log.warn("Failed to collect network data for {}", phoneNumber);
+            return AgentResult.builder()
+                    .agentId(agentId)
+                    .success(false)
+                    .error("Failed to collect network data")
+                    .build();
+        }
+        
+        // Create agent context
+        AgentContext context = AgentContext.builder()
+                .phoneNumber(phoneNumber)
+                .networkData(networkData)
+                .timestamp(java.time.LocalDateTime.now())
+                .build();
+        
+        try {
+            if (agent.shouldExecute(context)) {
+                AgentResult result = agent.execute(context);
+                
+                // Store execution history
+                executionHistory.computeIfAbsent(phoneNumber, k -> new ArrayList<>()).add(result);
+                
+                log.info("Completed execution of agent {} for device {}", agentId, phoneNumber);
+                return result;
+            } else {
+                log.debug("Agent {} should not execute for device {}", agentId, phoneNumber);
+                return AgentResult.builder()
+                        .agentId(agentId)
+                        .success(false)
+                        .message("Agent should not execute for this context")
+                        .build();
+            }
+        } catch (Exception e) {
+            log.error("Error executing agent: {}", agentId, e);
+            AgentResult errorResult = AgentResult.builder()
+                    .agentId(agentId)
+                    .success(false)
+                    .error(e.getMessage())
+                    .build();
+            
+            // Store error in history
+            executionHistory.computeIfAbsent(phoneNumber, k -> new ArrayList<>()).add(errorResult);
+            
+            return errorResult;
+        }
     }
     
     /**

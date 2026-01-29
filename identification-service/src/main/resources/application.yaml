@@ -56,6 +56,10 @@ nokia:
     base-url: https://network-as-code.p-eu.rapidapi.com
     rapidapi-key: c5cd88f861msh99ff63cc93e6945p13e42ajsn6dee49b8bb70
     rapidapi-host: network-as-code.nokia.rapidapi.com
+    authorization-server-url: https://authorization.p-eu.rapidapi.com
+    client-id: ${NOKIA_NAC_CLIENT_ID:}
+    client-secret: ${NOKIA_NAC_CLIENT_SECRET:}
+    scope: ${NOKIA_NAC_SCOPE:read write}
     timeout: 30000
     retry-attempts: 3
 

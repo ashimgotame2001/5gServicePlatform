@@ -5,12 +5,15 @@ import com.service.aiagentservice.agent.model.AgentAction;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
 import com.service.aiagentservice.service.DecisionEngine;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Agent that autonomously verifies and manages location data
@@ -21,6 +24,9 @@ public class LocationVerificationAgent extends BaseAgent {
     
     private final DecisionEngine decisionEngine;
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.location.base-url:http://localhost:8083}")
+    private String locationServiceUrl;
     
     public LocationVerificationAgent(DecisionEngine decisionEngine, InternalServiceClient internalServiceClient) {
         super("location-verification-agent", "Location Verification Agent",
@@ -49,7 +55,12 @@ public class LocationVerificationAgent extends BaseAgent {
             for (AgentAction action : decision.getActions()) {
                 try {
                     // Execute location verification
-                    internalServiceClient.verifyLocation(context.getPhoneNumber())
+                    Map<String, Object> locationRequest = new HashMap<>();
+                    Map<String, Object> device = new HashMap<>();
+                    device.put("phoneNumber", context.getPhoneNumber());
+                    locationRequest.put("device", device);
+                    
+                    internalServiceClient.callService(locationServiceUrl, "/location/verify/v1", locationRequest)
                             .subscribe(
                                     result -> {
                                         action.setStatus(AgentAction.ActionStatus.SUCCESS);

@@ -4,6 +4,8 @@ import com.service.devicemanagementservice.client.NokiaNacDeviceStatusClient;
 import com.service.shared.dto.CreateDeviceStatusSubscriptionDTO;
 import com.service.shared.dto.DeviceConnectivityStatusDTO;
 import com.service.shared.exception.GlobalException;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,7 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
 
     @Value("${nokia.nac.rapidapi-key}")
@@ -44,11 +47,13 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
     public NokiaNacDeviceStatusClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
 
@@ -65,10 +70,14 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
 
         log.debug("Fetching device connectivity status for device: {}", status.getPhoneNumber());
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(status)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -102,10 +111,14 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
 
         log.debug("Fetching device roaming status for device: {}", status.getPhoneNumber());
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(ROAMING_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(status)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -132,10 +145,14 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
     public Mono<Map<String, Object>> getAllSubscription() {
         log.debug("Fetching all device status subscriptions");
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(SUBSCRIPTIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Object.class)
@@ -187,10 +204,14 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
                 request.getSubscriptionDetail().getDevice() != null ?
                 request.getSubscriptionDetail().getDevice().getPhoneNumber() : "unknown");
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(SUBSCRIPTIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -224,10 +245,14 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
 
         log.debug("Fetching subscription with ID: {}", subscriptionId);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(SUBSCRIPTIONS_PATH + "/{id}", subscriptionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)

@@ -3,6 +3,8 @@ package com.service.connectivityservice.client.impl;
 import com.service.connectivityservice.client.NokiaNacNetworkSliceClient;
 import com.service.shared.dto.request.CreateNetworkSliceSubscriptionDTO;
 import com.service.shared.exception.GlobalException;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +35,7 @@ public class NokiaNacNetworkSliceClientImpl implements NokiaNacNetworkSliceClien
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
     @Value("${nokia.nac.base-url}")
     private String nokiaBaseUrl;
@@ -44,11 +47,13 @@ public class NokiaNacNetworkSliceClientImpl implements NokiaNacNetworkSliceClien
     public NokiaNacNetworkSliceClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
     private Retry createRetrySpec(int retryAttempts) {
@@ -95,10 +100,14 @@ public class NokiaNacNetworkSliceClientImpl implements NokiaNacNetworkSliceClien
                 request.getConfig().getSubscriptionDetail().getDevice() != null ?
                 request.getConfig().getSubscriptionDetail().getDevice().getPhoneNumber() : "unknown");
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(NETWORK_SLICE_SUBSCRIPTIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -125,10 +134,14 @@ public class NokiaNacNetworkSliceClientImpl implements NokiaNacNetworkSliceClien
     public Mono<Map<String, Object>> getAllNetworkSliceSubscriptions() {
         log.debug("Fetching all network slice subscriptions");
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(NETWORK_SLICE_SUBSCRIPTIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -161,10 +174,14 @@ public class NokiaNacNetworkSliceClientImpl implements NokiaNacNetworkSliceClien
 
         log.debug("Fetching network slice subscription with ID: {}", subscriptionId);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(NETWORK_SLICE_SUBSCRIPTIONS_PATH + "/{id}", subscriptionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -197,10 +214,14 @@ public class NokiaNacNetworkSliceClientImpl implements NokiaNacNetworkSliceClien
 
         log.debug("Deleting network slice subscription with ID: {}", subscriptionId);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.delete()
                 .uri(NETWORK_SLICE_SUBSCRIPTIONS_PATH + "/{id}", subscriptionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)

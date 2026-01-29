@@ -3,6 +3,8 @@ package com.service.devicemanagementservice.client.impl;
 import com.service.devicemanagementservice.client.NokiaNacDeviceSwapClient;
 import com.service.shared.dto.request.CheckDeviceSwap;
 import com.service.shared.dto.request.DeviceDTO;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +33,7 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
     @Value("${nokia.nac.rapidapi-key}")
     private String apiKey;
@@ -38,11 +41,13 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
     public NokiaNacDeviceSwapClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
     private Retry createRetrySpec(int retryAttempts) {
@@ -91,10 +96,14 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
 
         log.debug("Fetching device connectivity status for device: {}", device.getPhoneNumber());
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(device)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -127,10 +136,14 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
 
         log.debug("Fetching device connectivity status for device: {}", swap.getPhoneNumber());
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(swap)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)

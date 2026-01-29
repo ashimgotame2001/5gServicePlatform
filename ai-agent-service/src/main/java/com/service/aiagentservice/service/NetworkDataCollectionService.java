@@ -1,12 +1,11 @@
 package com.service.aiagentservice.service;
 
 import com.service.aiagentservice.agent.model.NetworkData;
-import reactor.core.publisher.Mono;
+import com.service.shared.service.InternalServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -22,8 +21,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class NetworkDataCollectionService {
     
+    @Qualifier("nokiaWebClient")
     private final WebClient nokiaWebClient;
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
+    
+    @Value("${services.identification.base-url:http://localhost:8082}")
+    private String identificationServiceUrl;
+    
+    @Value("${services.location.base-url:http://localhost:8083}")
+    private String locationServiceUrl;
     
     @Value("${ai.agents.data-collection.interval:10}")
     private int collectionInterval;
@@ -93,15 +102,16 @@ public class NetworkDataCollectionService {
      * Collect device status from Identification Service
      */
     private Mono<NetworkData.DeviceStatus> collectDeviceStatus(String phoneNumber) {
-        return internalServiceClient.getDeviceStatus(phoneNumber)
+        return internalServiceClient.getFromService(identificationServiceUrl, 
+                "/identification/share-phone-number?phoneNumber=" + phoneNumber)
                 .map(response -> {
                     NetworkData.DeviceStatus status = new NetworkData.DeviceStatus();
-                    if (response != null) {
-                        // Map response to DeviceStatus
-                        status.setStatus((String) response.getOrDefault("status", "UNKNOWN"));
-                        status.setDeviceId((String) response.getOrDefault("deviceId", ""));
-                        status.setImei((String) response.getOrDefault("imei", ""));
-                        status.setIsActive(Boolean.TRUE.equals(response.getOrDefault("isActive", false)));
+                    if (response != null && response.containsKey("data")) {
+                        Map<String, Object> data = (Map<String, Object>) response.get("data");
+                        status.setStatus((String) data.getOrDefault("status", "UNKNOWN"));
+                        status.setDeviceId((String) data.getOrDefault("deviceId", ""));
+                        status.setImei((String) data.getOrDefault("imei", ""));
+                        status.setIsActive(Boolean.TRUE.equals(data.getOrDefault("isActive", false)));
                     }
                     return status;
                 })
@@ -112,15 +122,21 @@ public class NetworkDataCollectionService {
      * Collect connectivity status from Connectivity Service
      */
     private Mono<NetworkData.ConnectivityMetrics> collectConnectivityStatus(String phoneNumber) {
-        return internalServiceClient.getConnectivityStatus(phoneNumber)
+        Map<String, Object> requestBody = Map.of(
+            "device", Map.of("phoneNumber", phoneNumber)
+        );
+        
+        return internalServiceClient.callService(connectivityServiceUrl, 
+                "/connectivity/Qos/sessions", requestBody)
                 .map(response -> {
                     NetworkData.ConnectivityMetrics metrics = new NetworkData.ConnectivityMetrics();
-                    if (response != null) {
-                        metrics.setStatus((String) response.getOrDefault("status", "UNKNOWN"));
-                        metrics.setSignalStrength((Integer) response.getOrDefault("signalStrength", 0));
-                        metrics.setNetworkType((String) response.getOrDefault("networkType", "UNKNOWN"));
-                        metrics.setLatency(((Number) response.getOrDefault("latency", 0.0)).doubleValue());
-                        metrics.setIsConnected(Boolean.TRUE.equals(response.getOrDefault("isConnected", false)));
+                    if (response != null && response.containsKey("data")) {
+                        Map<String, Object> data = (Map<String, Object>) response.get("data");
+                        metrics.setStatus((String) data.getOrDefault("status", "UNKNOWN"));
+                        metrics.setSignalStrength(((Number) data.getOrDefault("signalStrength", 0)).intValue());
+                        metrics.setNetworkType((String) data.getOrDefault("networkType", "UNKNOWN"));
+                        metrics.setLatency(((Number) data.getOrDefault("latency", 0.0)).doubleValue());
+                        metrics.setIsConnected(Boolean.TRUE.equals(data.getOrDefault("isConnected", false)));
                     }
                     return metrics;
                 })
@@ -131,14 +147,23 @@ public class NetworkDataCollectionService {
      * Collect QoS data from Connectivity Service
      */
     private Mono<NetworkData.QoSMetrics> collectQoSData(String phoneNumber) {
-        return internalServiceClient.getQoSStatus(phoneNumber)
+        Map<String, Object> requestBody = Map.of(
+            "device", Map.of("phoneNumber", phoneNumber)
+        );
+        
+        return internalServiceClient.callService(connectivityServiceUrl, 
+                "/connectivity/Qos/sessions", requestBody)
                 .map(response -> {
                     NetworkData.QoSMetrics qos = new NetworkData.QoSMetrics();
-                    if (response != null) {
-                        qos.setQosProfile((String) response.getOrDefault("qosProfile", "DEFAULT"));
-                        qos.setPriority(((Number) response.getOrDefault("priority", 5)).intValue());
-                        qos.setBandwidth(((Number) response.getOrDefault("bandwidth", 0.0)).doubleValue());
-                        qos.setLatency(((Number) response.getOrDefault("latency", 0.0)).doubleValue());
+                    if (response != null && response.containsKey("data")) {
+                        Map<String, Object> data = (Map<String, Object>) response.get("data");
+                        if (data.containsKey("sessions") && ((java.util.List<?>) data.get("sessions")).size() > 0) {
+                            Map<String, Object> session = (Map<String, Object>) ((java.util.List<?>) data.get("sessions")).get(0);
+                            qos.setQosProfile((String) session.getOrDefault("qosProfile", "DEFAULT"));
+                            qos.setPriority(((Number) session.getOrDefault("priority", 5)).intValue());
+                            qos.setBandwidth(((Number) session.getOrDefault("bandwidth", 0.0)).doubleValue());
+                            qos.setLatency(((Number) session.getOrDefault("latency", 0.0)).doubleValue());
+                        }
                     }
                     return qos;
                 })

@@ -32,25 +32,21 @@ public class DecisionEngine {
         NetworkData.ConnectivityMetrics connectivity = networkData.getConnectivity();
         NetworkData.QoSMetrics qos = networkData.getQos();
         
-        // Rule 1: Low signal strength requires QoS boost
         if (connectivity.getSignalStrength() != null && connectivity.getSignalStrength() < 50) {
             confidence += 0.3;
             reason += "Low signal strength detected. ";
         }
         
-        // Rule 2: High latency requires QoS adjustment
         if (connectivity.getLatency() != null && connectivity.getLatency() > 100) {
             confidence += 0.3;
             reason += "High latency detected. ";
         }
         
-        // Rule 3: Low throughput requires bandwidth increase
         if (connectivity.getThroughput() != null && connectivity.getThroughput() < 10.0) {
             confidence += 0.2;
             reason += "Low throughput detected. ";
         }
         
-        // Rule 4: Current QoS profile is not optimal
         if (qos.getQosProfile() != null && qos.getQosProfile().equals("DEFAULT")) {
             confidence += 0.2;
             reason += "Default QoS profile in use. ";
@@ -64,13 +60,12 @@ public class DecisionEngine {
                     .status(AgentAction.ActionStatus.PENDING)
                     .build();
             
-            // Determine QoS parameters based on network conditions
             if (connectivity.getSignalStrength() != null && connectivity.getSignalStrength() < 50) {
-                action.getParameters().put("priority", 1); // High priority
-                action.getParameters().put("bandwidth", 100.0); // Increase bandwidth
+                action.getParameters().put("priority", 1);
+                action.getParameters().put("bandwidth", 100.0);
             }
             if (connectivity.getLatency() != null && connectivity.getLatency() > 100) {
-                action.getParameters().put("latency", 50); // Target latency
+                action.getParameters().put("latency", 50);
             }
             
             actions.add(action);
@@ -83,10 +78,7 @@ public class DecisionEngine {
                 .actions(actions)
                 .build();
     }
-    
-    /**
-     * Analyze location data and determine if verification is needed
-     */
+
     public DecisionResult analyzeLocationVerification(NetworkData networkData) {
         List<AgentAction> actions = new ArrayList<>();
         double confidence = 0.0;
@@ -94,7 +86,6 @@ public class DecisionEngine {
         
         NetworkData.LocationData location = networkData.getLocation();
         
-        // Rule 1: Location data is stale (maxAge exceeded)
         if (location.getMaxAge() != null && location.getMaxAge() > 120) {
             confidence = 0.8;
             reason = "Location data is stale, verification needed. ";
@@ -109,7 +100,6 @@ public class DecisionEngine {
             actions.add(action);
         }
         
-        // Rule 2: Location accuracy is low
         if (location.getAccuracy() != null && location.getAccuracy() > 100) {
             confidence = Math.max(confidence, 0.7);
             reason += "Low location accuracy detected. ";

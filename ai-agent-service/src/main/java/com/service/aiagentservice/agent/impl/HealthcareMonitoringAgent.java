@@ -4,11 +4,13 @@ import com.service.aiagentservice.agent.BaseAgent;
 import com.service.aiagentservice.agent.model.AgentAction;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +22,15 @@ import java.util.Map;
 public class HealthcareMonitoringAgent extends BaseAgent {
     
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
+    
+    @Value("${services.location.base-url:http://localhost:8083}")
+    private String locationServiceUrl;
+    
+    @Value("${services.identification.base-url:http://localhost:8082}")
+    private String identificationServiceUrl;
     
     public HealthcareMonitoringAgent(InternalServiceClient internalServiceClient) {
         super("healthcare-monitoring-agent", "Healthcare Remote Monitoring Agent",
@@ -60,13 +71,12 @@ public class HealthcareMonitoringAgent extends BaseAgent {
             log.warn("Patient monitoring device requires QoS optimization: {}", context.getPhoneNumber());
             
             // Request low-latency QoS for healthcare
-            Map<String, Object> qosRequest = Map.of(
-                    "phoneNumber", context.getPhoneNumber(),
-                    "priority", 1, // High priority
-                    "bandwidth", 50.0, // Sufficient for monitoring
-                    "latency", 30, // Target latency for healthcare
-                    "reason", "HEALTHCARE_MONITORING"
-            );
+            Map<String, Object> qosRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            qosRequest.put("device", device);
+            qosRequest.put("qosProfile", "HIGH_BANDWIDTH");
+            qosRequest.put("duration", 3600);
             
             AgentAction action = AgentAction.builder()
                     .actionType("HEALTHCARE_QOS")
@@ -76,7 +86,7 @@ public class HealthcareMonitoringAgent extends BaseAgent {
                     .parameters(Map.of("priority", 1, "latency", 30))
                     .build();
             
-            internalServiceClient.requestQoSAdjustment(qosRequest)
+            internalServiceClient.callService(connectivityServiceUrl, "/connectivity/Qos/sessions/create", qosRequest)
                     .subscribe(
                             result -> {
                                 action.setStatus(AgentAction.ActionStatus.SUCCESS);
@@ -95,7 +105,8 @@ public class HealthcareMonitoringAgent extends BaseAgent {
         }
         
         // Verify device status (critical for patient safety)
-        internalServiceClient.getDeviceStatus(context.getPhoneNumber())
+        internalServiceClient.getFromService(identificationServiceUrl, 
+                "/identification/share-phone-number?phoneNumber=" + context.getPhoneNumber())
                 .subscribe(
                         status -> {
                             boolean isActive = Boolean.TRUE.equals(status.getOrDefault("isActive", false));
@@ -114,7 +125,12 @@ public class HealthcareMonitoringAgent extends BaseAgent {
         
         // Verify location for patient safety
         if (context.getNetworkData().getLocation() != null) {
-            internalServiceClient.verifyLocation(context.getPhoneNumber())
+            Map<String, Object> locationRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            locationRequest.put("device", device);
+            
+            internalServiceClient.callService(locationServiceUrl, "/location/verify/v1", locationRequest)
                     .subscribe(
                             result -> {
                                 log.debug("Patient device location verified");

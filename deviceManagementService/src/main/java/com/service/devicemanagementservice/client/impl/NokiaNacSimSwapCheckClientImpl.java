@@ -2,6 +2,8 @@ package com.service.devicemanagementservice.client.impl;
 
 import com.service.devicemanagementservice.client.NokiaNacSimSwapCheckClient;
 import com.service.shared.dto.request.DeviceDTO;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,13 +25,14 @@ import java.util.Map;
 public class NokiaNacSimSwapCheckClientImpl implements NokiaNacSimSwapCheckClient {
 
     private static final String DEVICE_STATUS_PATH = "https://network-as-code.p-eu.rapidapi.com/";
-    private static final String host = "network-as-code.p-eu.rapidapi.com";
+    private static final String host = "network-as-code.nokia.rapidapi.com";
     private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "passthrough/camara/v1/sim-swap/sim-swap/v0/retrieve-date";
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
     @Value("${nokia.nac.rapidapi-key}")
     private String apiKey;
@@ -37,11 +40,13 @@ public class NokiaNacSimSwapCheckClientImpl implements NokiaNacSimSwapCheckClien
     public NokiaNacSimSwapCheckClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
     private Retry createRetrySpec(int retryAttempts) {
@@ -123,10 +128,14 @@ public class NokiaNacSimSwapCheckClientImpl implements NokiaNacSimSwapCheckClien
 
         log.debug("Fetching device connectivity status for device: {}", device.getPhoneNumber());
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(device)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)

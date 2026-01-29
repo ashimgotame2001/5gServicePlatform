@@ -169,97 +169,219 @@
 			"name": "Connectivity Service",
 			"item": [
 				{
-					"name": "QoS - Retrieve Sessions by Phone Number",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+					"name": "QoS Management",
+					"item": [
+						{
+							"name": "Retrieve Sessions by Phone Number",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/Qos/sessions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"Qos",
+										"sessions"
+									]
+								},
+								"description": "Retrieve QoS sessions by phone number"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\"\n  }\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseUrl}}/connectivity/Qos/sessions",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"connectivity",
-								"Qos",
-								"sessions"
-							]
+						{
+							"name": "Create Session",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+99999991001\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    }\n  },\n  \"applicationServer\": {\n    \"ipv4Address\": \"84.125.93.10\"\n  },\n  \"qosProfile\": \"HIGH_BANDWIDTH\",\n  \"duration\": 3600\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/Qos/sessions/create",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"Qos",
+										"sessions",
+										"create"
+									]
+								},
+								"description": "Create a new QoS session"
+							},
+							"response": []
 						},
-						"description": "Retrieve QoS sessions by phone number"
-					},
-					"response": []
+						{
+							"name": "Get Session by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/Qos/sessions/{{sessionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"Qos",
+										"sessions",
+										"{{sessionId}}"
+									]
+								},
+								"description": "Get QoS session by session ID"
+							},
+							"response": []
+						}
+					],
+					"description": "Quality of Service on Demand (QoD) session management"
 				},
 				{
-					"name": "QoS - Create Session",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+					"name": "Network Slice",
+					"item": [
+						{
+							"name": "Create Network Slice Subscription",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"protocol\": \"HTTP\",\n  \"sink\": \"https://application-server.com/webhook\",\n  \"sinkCredential\": {\n    \"credentialType\": \"PLAIN\",\n    \"identifier\": \"client-id\",\n    \"secret\": \"client-secret\"\n  },\n  \"types\": [\n    \"org.camaraproject.network-slice.v0.slice-status-change\"\n  ],\n  \"config\": {\n    \"subscriptionDetail\": {\n      \"device\": {\n        \"phoneNumber\": \"+1234567890\",\n        \"networkAccessIdentifier\": \"123456789@domain.com\",\n        \"ipv4Address\": {\n          \"publicAddress\": \"84.125.93.10\",\n          \"privateAddress\": \"84.125.93.10\",\n          \"publicPort\": 0\n        },\n        \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n      },\n      \"sliceInfo\": {\n        \"sliceId\": \"slice-001\",\n        \"sliceType\": \"eMBB\",\n        \"serviceType\": \"enhanced-mobile-broadband\",\n        \"parameters\": {}\n      }\n    },\n    \"subscriptionExpireTime\": \"2024-12-31T23:59:59Z\",\n    \"subscriptionMaxEvents\": 1000,\n    \"initialEvent\": false\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/network-slice/subscriptions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"network-slice",
+										"subscriptions"
+									]
+								},
+								"description": "Create a network slice subscription"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+99999991001\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    }\n  },\n  \"applicationServer\": {\n    \"ipv4Address\": \"84.125.93.10\"\n  },\n  \"qosProfile\": \"HIGH_BANDWIDTH\",\n  \"duration\": 3600\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseUrl}}/connectivity/Qos/sessions/create",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"connectivity",
-								"Qos",
-								"sessions",
-								"create"
-							]
+						{
+							"name": "Get All Network Slice Subscriptions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/network-slice/subscriptions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"network-slice",
+										"subscriptions"
+									]
+								},
+								"description": "Get all network slice subscriptions"
+							},
+							"response": []
 						},
-						"description": "Create a new QoS session"
-					},
-					"response": []
-				},
-				{
-					"name": "QoS - Get Session by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/connectivity/Qos/sessions/{{sessionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"connectivity",
-								"Qos",
-								"sessions",
-								"{{sessionId}}"
-							]
+						{
+							"name": "Get Network Slice Subscription by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/network-slice/subscriptions/{{subscriptionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"network-slice",
+										"subscriptions",
+										"{{subscriptionId}}"
+									]
+								},
+								"description": "Get network slice subscription by ID"
+							},
+							"response": []
 						},
-						"description": "Get QoS session by session ID"
-					},
-					"response": []
+						{
+							"name": "Delete Network Slice Subscription",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/connectivity/network-slice/subscriptions/{{subscriptionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"connectivity",
+										"network-slice",
+										"subscriptions",
+										"{{subscriptionId}}"
+									]
+								},
+								"description": "Delete network slice subscription"
+							},
+							"response": []
+						}
+					],
+					"description": "Network slice subscription management"
 				},
 				{
 					"name": "Health Check",
@@ -281,7 +403,7 @@
 					"response": []
 				}
 			],
-			"description": "Connectivity and QoS management endpoints"
+			"description": "Connectivity, QoS, and Network Slice management endpoints"
 		},
 		{
 			"name": "Identification Service",
@@ -368,174 +490,296 @@
 			"name": "Location Service",
 			"item": [
 				{
-					"name": "Verify Location",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+					"name": "Location Verification & Retrieval",
+					"item": [
+						{
+							"name": "Verify Location",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/location/verify?version=v1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"verify"
+									],
+									"query": [
+										{
+											"key": "version",
+											"value": "v1",
+											"description": "API version: v1, v2, or v3 (default: v1)"
+										}
+									]
+								},
+								"description": "Verify device location with area definition"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseUrl}}/location/verify?version=v1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"verify"
-							],
-							"query": [
-								{
-									"key": "version",
-									"value": "v1",
-									"description": "API version: v1, v2, or v3 (default: v1)"
-								}
-							]
+						{
+							"name": "Verify Location (v1)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/location/verify/v1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"verify",
+										"v1"
+									]
+								},
+								"description": "Verify device location using v1 API"
+							},
+							"response": []
 						},
-						"description": "Verify device location with area definition"
-					},
-					"response": []
+						{
+							"name": "Verify Location (v2)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/location/verify/v2",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"verify",
+										"v2"
+									]
+								},
+								"description": "Verify device location using v2 API"
+							},
+							"response": []
+						},
+						{
+							"name": "Verify Location (v3)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/location/verify/v3",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"verify",
+										"v3"
+									]
+								},
+								"description": "Verify device location using v3 API"
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Location",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/location/retrieve",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"retrieve"
+									]
+								},
+								"description": "Retrieve current device location"
+							},
+							"response": []
+						}
+					],
+					"description": "Location verification and retrieval endpoints"
 				},
 				{
-					"name": "Verify Location (v1)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+					"name": "Geofencing Subscriptions",
+					"item": [
+						{
+							"name": "Create Geofencing Subscription",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"protocol\": \"HTTP\",\n  \"sink\": \"https://application-server.com/webhook\",\n  \"sinkCredential\": {\n    \"credentialType\": \"PLAIN\",\n    \"identifier\": \"client-id\",\n    \"secret\": \"client-secret\"\n  },\n  \"types\": [\n    \"org.camaraproject.geofencing-subscriptions.v0.area-entered\",\n    \"org.camaraproject.geofencing-subscriptions.v0.area-left\"\n  ],\n  \"config\": {\n    \"subscriptionDetail\": {\n      \"device\": {\n        \"phoneNumber\": \"+1234567890\",\n        \"networkAccessIdentifier\": \"123456789@domain.com\",\n        \"ipv4Address\": {\n          \"publicAddress\": \"84.125.93.10\",\n          \"privateAddress\": \"84.125.93.10\",\n          \"publicPort\": 0\n        },\n        \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n      },\n      \"area\": {\n        \"areaType\": \"CIRCLE\",\n        \"center\": {\n          \"latitude\": 40.7128,\n          \"longitude\": -74.0060\n        },\n        \"radius\": 1000\n      }\n    },\n    \"subscriptionExpireTime\": \"2024-12-31T23:59:59Z\",\n    \"subscriptionMaxEvents\": 1000,\n    \"initialEvent\": false\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/location/geofencing/subscriptions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"geofencing",
+										"subscriptions"
+									]
+								},
+								"description": "Create a geofencing subscription"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseUrl}}/location/verify/v1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"verify",
-								"v1"
-							]
-						},
-						"description": "Verify device location using v1 API"
-					},
-					"response": []
-				},
-				{
-					"name": "Verify Location (v2)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+						{
+							"name": "Get All Geofencing Subscriptions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/location/geofencing/subscriptions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"geofencing",
+										"subscriptions"
+									]
+								},
+								"description": "Get all geofencing subscriptions"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseUrl}}/location/verify/v2",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"verify",
-								"v2"
-							]
-						},
-						"description": "Verify device location using v2 API"
-					},
-					"response": []
-				},
-				{
-					"name": "Verify Location (v3)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+						{
+							"name": "Get Geofencing Subscription by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/location/geofencing/subscriptions/{{subscriptionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"geofencing",
+										"subscriptions",
+										"{{subscriptionId}}"
+									]
+								},
+								"description": "Get geofencing subscription by ID"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\",\n  \"area\": {\n    \"areaType\": {\n      \"0\": \"C\",\n      \"1\": \"I\",\n      \"2\": \"R\",\n      \"3\": \"C\",\n      \"4\": \"L\",\n      \"5\": \"E\"\n    },\n    \"center\": {\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060\n    },\n    \"radius\": {}\n  }\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{baseUrl}}/location/verify/v3",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"verify",
-								"v3"
-							]
-						},
-						"description": "Verify device location using v3 API"
-					},
-					"response": []
-				},
-				{
-					"name": "Retrieve Location",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+						{
+							"name": "Delete Geofencing Subscription",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/location/geofencing/subscriptions/{{subscriptionId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"location",
+										"geofencing",
+										"subscriptions",
+										"{{subscriptionId}}"
+									]
+								},
+								"description": "Delete geofencing subscription"
 							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"device\": {\n    \"phoneNumber\": \"+1234567890\",\n    \"ipv4Address\": {\n      \"publicAddress\": \"84.125.93.10\",\n      \"privateAddress\": \"84.125.93.10\",\n      \"publicPort\": 0\n    },\n    \"networkAccessIdentifier\": \"123456789@domain.com\",\n    \"ipv6Address\": \"2001:db8:85a3:8d3:1319:8a2e:370:7344\"\n  },\n  \"maxAge\": \"60\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/location/retrieve",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"location",
-								"retrieve"
-							]
-						},
-						"description": "Retrieve current device location"
-					},
-					"response": []
+							"response": []
+						}
+					],
+					"description": "Geofencing subscription management endpoints"
 				},
 				{
 					"name": "Health Check",
@@ -563,7 +807,10 @@
 			"name": "Device Management Service",
 			"item": [
 				{
-					"name": "Device Status - Get Connectivity Status",
+					"name": "Device Status",
+					"item": [
+						{
+							"name": "Get Connectivity Status",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -593,10 +840,10 @@
 						},
 						"description": "Get device connectivity status"
 					},
-					"response": []
-				},
-				{
-					"name": "Device Status - Get Roaming Status",
+							"response": []
+						},
+						{
+							"name": "Get Roaming Status",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -626,10 +873,10 @@
 						},
 						"description": "Get device roaming status"
 					},
-					"response": []
-				},
-				{
-					"name": "Device Status - Get All Subscriptions",
+							"response": []
+						},
+						{
+							"name": "Get All Subscriptions",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -650,10 +897,10 @@
 						},
 						"description": "Get all device status subscriptions"
 					},
-					"response": []
-				},
-				{
-					"name": "Device Status - Create Subscription",
+							"response": []
+						},
+						{
+							"name": "Create Subscription",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -682,10 +929,10 @@
 						},
 						"description": "Create device status subscription"
 					},
-					"response": []
-				},
-				{
-					"name": "Device Status - Get Subscription by ID",
+							"response": []
+						},
+						{
+							"name": "Get Subscription by ID",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -707,10 +954,16 @@
 						},
 						"description": "Get subscription by ID"
 					},
-					"response": []
+							"response": []
+						}
+					],
+					"description": "Device status and subscription management"
 				},
 				{
-					"name": "Device Swap - Retrieve Swap Date",
+					"name": "Device Swap",
+					"item": [
+						{
+							"name": "Retrieve Swap Date",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -740,10 +993,10 @@
 						},
 						"description": "Retrieve device swap date"
 					},
-					"response": []
-				},
-				{
-					"name": "Device Swap - Check Device Swap",
+							"response": []
+						},
+						{
+							"name": "Check Device Swap",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -773,7 +1026,10 @@
 						},
 						"description": "Check device swap status"
 					},
-					"response": []
+							"response": []
+						}
+					],
+					"description": "Device swap detection and management"
 				},
 				{
 					"name": "Health Check",
@@ -801,136 +1057,382 @@
 			"name": "AI Agent Service",
 			"item": [
 				{
-					"name": "Execute All Agents",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/ai-agents/execute/{{phoneNumber}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ai-agents",
-								"execute",
-								"{{phoneNumber}}"
-							]
+					"name": "Agent Execution",
+					"item": [
+						{
+							"name": "Execute All Agents",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute all enabled AI agents for a specific device/phone number. Includes Emergency Connectivity Agent, QoS Optimization Agent, and other registered agents."
+							},
+							"response": []
 						},
-						"description": "Execute all enabled AI agents for a specific device/phone number"
-					},
-					"response": []
+						{
+							"name": "Execute Emergency Connectivity Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/emergency-connectivity-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"emergency-connectivity-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Emergency Connectivity Agent for guaranteed 5G connectivity (BR-1 through BR-7). Compatible with Emergency Connectivity Setup."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute QoS Optimization Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/qos-optimization-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"qos-optimization-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute QoS Optimization Agent to autonomously optimize Quality of Service based on real-time network conditions."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Location Verification Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/location-verification-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"location-verification-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Location Verification Agent to autonomously verify and manage location data for devices."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Device Management Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/device-management-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"device-management-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Device Management Agent to autonomously manage device and SIM card operations based on network conditions."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Healthcare Monitoring Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/healthcare-monitoring-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"healthcare-monitoring-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Healthcare Monitoring Agent to ensure reliable, low-latency connectivity for remote patient monitoring devices."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Public Safety Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/public-safety-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"public-safety-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Public Safety Agent to monitor public safety devices, environmental sensors, and optimize network resources for sustainability."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Smart City Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/smart-city-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"smart-city-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Smart City Agent to monitor and manage city infrastructure devices (traffic lights, sensors, cameras) with guaranteed connectivity."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Transportation Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/transportation-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"transportation-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Transportation Agent to manage connectivity for transportation systems, fleet management, and event logistics."
+							},
+							"response": []
+						},
+						{
+							"name": "Execute Network Monitoring Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/execute/network-monitoring-agent/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"execute",
+										"network-monitoring-agent",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Execute Network Monitoring Agent to monitor network performance and detect issues proactively."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Execution History",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/history/{{phoneNumber}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"history",
+										"{{phoneNumber}}"
+									]
+								},
+								"description": "Get execution history for a device. Returns all agent execution results for the specified phone number."
+							},
+							"response": []
+						}
+					],
+					"description": "Agent execution and history management"
 				},
 				{
-					"name": "Get Execution History",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/ai-agents/history/{{phoneNumber}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ai-agents",
-								"history",
-								"{{phoneNumber}}"
-							]
+					"name": "Agent Management",
+					"item": [
+						{
+							"name": "List All Agents",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/agents",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"agents"
+									]
+								},
+								"description": "List all registered AI agents including: emergency-connectivity-agent, qos-optimization-agent, location-verification-agent, device-management-agent, healthcare-monitoring-agent, public-safety-agent, smart-city-agent, transportation-agent, network-monitoring-agent"
+							},
+							"response": []
 						},
-						"description": "Get execution history for a device"
-					},
-					"response": []
-				},
-				{
-					"name": "List All Agents",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/ai-agents/agents",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ai-agents",
-								"agents"
-							]
+						{
+							"name": "Get Agent Details",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/agents/{{agentId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"agents",
+										"{{agentId}}"
+									]
+								},
+								"description": "Get details for a specific agent by ID. Common agent IDs: emergency-connectivity-agent, qos-optimization-agent, location-verification-agent, device-management-agent, healthcare-monitoring-agent, public-safety-agent, smart-city-agent, transportation-agent"
+							},
+							"response": []
 						},
-						"description": "List all registered AI agents"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Agent Details",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/ai-agents/agents/{{agentId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ai-agents",
-								"agents",
-								"{{agentId}}"
-							]
-						},
-						"description": "Get details for a specific agent by ID (e.g., qos-optimization-agent, network-monitoring-agent)"
-					},
-					"response": []
-				},
-				{
-					"name": "Enable/Disable Agent",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/ai-agents/agents/{{agentId}}/enable?enabled={{enabled}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ai-agents",
-								"agents",
-								"{{agentId}}",
-								"enable"
-							],
-							"query": [
-								{
-									"key": "enabled",
-									"value": "{{enabled}}",
-									"description": "true to enable, false to disable"
-								}
-							]
-						},
-						"description": "Enable or disable a specific agent"
-					},
-					"response": []
+						{
+							"name": "Enable/Disable Agent",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/ai-agents/agents/{{agentId}}/enable?enabled={{enabled}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"ai-agents",
+										"agents",
+										"{{agentId}}",
+										"enable"
+									],
+									"query": [
+										{
+											"key": "enabled",
+											"value": "{{enabled}}",
+											"description": "true to enable, false to disable"
+										}
+									]
+								},
+								"description": "Enable or disable a specific agent. Disabled agents will not execute during agent orchestration."
+							},
+							"response": []
+						}
+					],
+					"description": "Agent configuration and management"
 				},
 				{
 					"name": "Health Check",
@@ -952,93 +1454,331 @@
 								"health"
 							]
 						},
-						"description": "Check AI agent service health and get agent statistics"
+						"description": "Check AI agent service health and get agent statistics including total agents count and enabled agents count"
 					},
 					"response": []
 				}
 			],
-			"description": "AI Agent orchestration and management endpoints"
+			"description": "AI Agent orchestration and management endpoints. Includes Emergency Connectivity Agent compatible with Emergency Connectivity Setup (BR-1 through BR-7)"
 		},
 		{
-			"name": "Nokia NAC Metadata",
+			"name": "Nokia NAC",
 			"item": [
 				{
-					"name": "Get OpenID Configuration",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/nokia-nac/metadata/openid-configuration",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"nokia-nac",
-								"metadata",
-								"openid-configuration"
-							]
+					"name": "Metadata",
+					"item": [
+						{
+							"name": "Get OpenID Configuration",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/metadata/openid-configuration",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"metadata",
+										"openid-configuration"
+									]
+								},
+								"description": "Get OpenID configuration metadata from Nokia NAC"
+							},
+							"response": []
 						},
-						"description": "Get OpenID configuration metadata from Nokia NAC"
-					},
-					"response": []
+						{
+							"name": "Get Security.txt",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/metadata/security.txt",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"metadata",
+										"security.txt"
+									]
+								},
+								"description": "Get security.txt from Nokia NAC"
+							},
+							"response": []
+						},
+						{
+							"name": "Get OAuth Authorization Server",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/metadata/oauth-authorization-server",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"metadata",
+										"oauth-authorization-server"
+									]
+								},
+								"description": "Get OAuth authorization server metadata from Nokia NAC"
+							},
+							"response": []
+						}
+					],
+					"description": "Nokia NAC metadata endpoints"
 				},
 				{
-					"name": "Get Security.txt",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/nokia-nac/metadata/security.txt",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"nokia-nac",
-								"metadata",
-								"security.txt"
-							]
+					"name": "Authorization",
+					"item": [
+						{
+							"name": "Get Authorization URL",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/authorization/authorize?clientId={{clientId}}&redirectUri={{redirectUri}}&scope={{scope}}&state={{state}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"authorization",
+										"authorize"
+									],
+									"query": [
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "OAuth2 client ID"
+										},
+										{
+											"key": "redirectUri",
+											"value": "{{redirectUri}}",
+											"description": "Redirect URI after authorization"
+										},
+										{
+											"key": "scope",
+											"value": "{{scope}}",
+											"description": "Requested scope (optional)"
+										},
+										{
+											"key": "state",
+											"value": "{{state}}",
+											"description": "State parameter for CSRF protection (optional)"
+										}
+									]
+								},
+								"description": "Get authorization URL for authorization code flow"
+							},
+							"response": []
 						},
-						"description": "Get security.txt from Nokia NAC"
-					},
-					"response": []
-				},
-				{
-					"name": "Get OAuth Authorization Server",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{authToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/nokia-nac/metadata/oauth-authorization-server",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"nokia-nac",
-								"metadata",
-								"oauth-authorization-server"
-							]
+						{
+							"name": "Request Token (Client Credentials)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/authorization/token/client-credentials?clientId={{clientId}}&clientSecret={{clientSecret}}&scope={{scope}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"authorization",
+										"token",
+										"client-credentials"
+									],
+									"query": [
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "OAuth2 client ID"
+										},
+										{
+											"key": "clientSecret",
+											"value": "{{clientSecret}}",
+											"description": "OAuth2 client secret"
+										},
+										{
+											"key": "scope",
+											"value": "{{scope}}",
+											"description": "Requested scope (optional)"
+										}
+									]
+								},
+								"description": "Request access token using client credentials grant (machine-to-machine)"
+							},
+							"response": []
 						},
-						"description": "Get OAuth authorization server metadata from Nokia NAC"
-					},
-					"response": []
+						{
+							"name": "Request Token (Authorization Code)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/authorization/token/authorization-code?code={{code}}&redirectUri={{redirectUri}}&clientId={{clientId}}&clientSecret={{clientSecret}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"authorization",
+										"token",
+										"authorization-code"
+									],
+									"query": [
+										{
+											"key": "code",
+											"value": "{{code}}",
+											"description": "Authorization code from authorization endpoint"
+										},
+										{
+											"key": "redirectUri",
+											"value": "{{redirectUri}}",
+											"description": "Redirect URI (must match authorization request)"
+										},
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "OAuth2 client ID"
+										},
+										{
+											"key": "clientSecret",
+											"value": "{{clientSecret}}",
+											"description": "OAuth2 client secret"
+										}
+									]
+								},
+								"description": "Request access token using authorization code grant"
+							},
+							"response": []
+						},
+						{
+							"name": "Refresh Token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/authorization/token/refresh?refreshToken={{refreshToken}}&clientId={{clientId}}&clientSecret={{clientSecret}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"authorization",
+										"token",
+										"refresh"
+									],
+									"query": [
+										{
+											"key": "refreshToken",
+											"value": "{{refreshToken}}",
+											"description": "Refresh token from previous token response"
+										},
+										{
+											"key": "clientId",
+											"value": "{{clientId}}",
+											"description": "OAuth2 client ID"
+										},
+										{
+											"key": "clientSecret",
+											"value": "{{clientSecret}}",
+											"description": "OAuth2 client secret"
+										}
+									]
+								},
+								"description": "Refresh access token using refresh token grant"
+							},
+							"response": []
+						},
+						{
+							"name": "Request Token (Custom)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"grantType\": \"client_credentials\",\n  \"clientId\": \"your-client-id\",\n  \"clientSecret\": \"your-client-secret\",\n  \"scope\": \"read write\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/nokia-nac/authorization/token",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"nokia-nac",
+										"authorization",
+										"token"
+									]
+								},
+								"description": "Request token with custom grant type and parameters"
+							},
+							"response": []
+						}
+					],
+					"description": "Nokia NAC OAuth2 authorization and token management endpoints"
 				}
 			],
-			"description": "Nokia Network as Code metadata endpoints for OpenID and OAuth configuration"
+			"description": "Nokia Network as Code metadata and authorization endpoints"
 		},
 		{
 			"name": "Monitoring & Actuator",
@@ -1142,6 +1882,41 @@
 		},
 		{
 			"key": "sessionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": "your-nokia-nac-client-id",
+			"type": "string"
+		},
+		{
+			"key": "clientSecret",
+			"value": "your-nokia-nac-client-secret",
+			"type": "string"
+		},
+		{
+			"key": "redirectUri",
+			"value": "http://localhost:8080/callback",
+			"type": "string"
+		},
+		{
+			"key": "scope",
+			"value": "read write",
+			"type": "string"
+		},
+		{
+			"key": "state",
+			"value": "random-state-value",
+			"type": "string"
+		},
+		{
+			"key": "code",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
 			"value": "",
 			"type": "string"
 		},

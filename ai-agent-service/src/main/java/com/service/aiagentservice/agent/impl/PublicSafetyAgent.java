@@ -3,11 +3,13 @@ package com.service.aiagentservice.agent.impl;
 import com.service.aiagentservice.agent.BaseAgent;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +21,12 @@ import java.util.Map;
 public class PublicSafetyAgent extends BaseAgent {
     
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
+    
+    @Value("${services.identification.base-url:http://localhost:8082}")
+    private String identificationServiceUrl;
     
     public PublicSafetyAgent(InternalServiceClient internalServiceClient) {
         super("public-safety-agent", "Public Safety & Sustainability Agent",
@@ -50,14 +58,14 @@ public class PublicSafetyAgent extends BaseAgent {
             log.warn("Public safety device connectivity issue: {}", context.getPhoneNumber());
             
             // Request QoS for public safety
-            Map<String, Object> qosRequest = Map.of(
-                    "phoneNumber", context.getPhoneNumber(),
-                    "priority", 1,
-                    "bandwidth", 50.0,
-                    "reason", "PUBLIC_SAFETY"
-            );
+            Map<String, Object> qosRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            qosRequest.put("device", device);
+            qosRequest.put("qosProfile", "HIGH_BANDWIDTH");
+            qosRequest.put("duration", 3600);
             
-            internalServiceClient.requestQoSAdjustment(qosRequest)
+            internalServiceClient.callService(connectivityServiceUrl, "/connectivity/Qos/sessions/create", qosRequest)
                     .subscribe(
                             result -> {
                                 log.info("Public safety QoS applied");
@@ -74,7 +82,8 @@ public class PublicSafetyAgent extends BaseAgent {
         }
         
         // Verify device status
-        internalServiceClient.getDeviceStatus(context.getPhoneNumber())
+        internalServiceClient.getFromService(identificationServiceUrl, 
+                "/identification/share-phone-number?phoneNumber=" + context.getPhoneNumber())
                 .subscribe(
                         status -> {
                             boolean isActive = Boolean.TRUE.equals(status.getOrDefault("isActive", false));

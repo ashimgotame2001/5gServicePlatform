@@ -5,11 +5,13 @@ import com.service.aiagentservice.agent.model.AgentAction;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
 import com.service.aiagentservice.service.DecisionEngine;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +24,9 @@ public class DeviceManagementAgent extends BaseAgent {
     
     private final DecisionEngine decisionEngine;
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.device-management.base-url:http://localhost:8084}")
+    private String deviceManagementServiceUrl;
     
     public DeviceManagementAgent(DecisionEngine decisionEngine, InternalServiceClient internalServiceClient) {
         super("device-management-agent", "Device Management Agent",
@@ -51,44 +56,46 @@ public class DeviceManagementAgent extends BaseAgent {
                 try {
                     if ("DEVICE_SWAP".equals(action.getActionType())) {
                         // Prepare device swap request
-                        Map<String, Object> swapRequest = Map.of(
-                                "phoneNumber", context.getPhoneNumber(),
-                                "reason", action.getReason()
-                        );
+                        Map<String, Object> swapRequest = new HashMap<>();
+                        Map<String, Object> device = new HashMap<>();
+                        device.put("phoneNumber", context.getPhoneNumber());
+                        swapRequest.put("device", device);
+                        swapRequest.put("maxAge", 60);
                         
                         // Execute the action
-                        internalServiceClient.swapDevice(swapRequest)
+                        internalServiceClient.callService(deviceManagementServiceUrl, "/device/swap/check", swapRequest)
                                 .subscribe(
                                         result -> {
                                             action.setStatus(AgentAction.ActionStatus.SUCCESS);
                                             action.setResult(result);
-                                            log.info("Device swap executed successfully");
+                                            log.info("Device swap check executed successfully");
                                         },
                                         error -> {
                                             action.setStatus(AgentAction.ActionStatus.FAILED);
                                             action.setError(error.getMessage());
-                                            log.error("Device swap failed", error);
+                                            log.error("Device swap check failed", error);
                                         }
                                 );
                     } else if ("SIM_SWAP".equals(action.getActionType())) {
                         // Prepare SIM swap request
-                        Map<String, Object> swapRequest = Map.of(
-                                "phoneNumber", context.getPhoneNumber(),
-                                "reason", action.getReason()
-                        );
+                        Map<String, Object> swapRequest = new HashMap<>();
+                        Map<String, Object> device = new HashMap<>();
+                        device.put("phoneNumber", context.getPhoneNumber());
+                        swapRequest.put("device", device);
+                        swapRequest.put("maxAge", 60);
                         
                         // Execute the action
-                        internalServiceClient.swapSim(swapRequest)
+                        internalServiceClient.callService(deviceManagementServiceUrl, "/device/swap/check", swapRequest)
                                 .subscribe(
                                         result -> {
                                             action.setStatus(AgentAction.ActionStatus.SUCCESS);
                                             action.setResult(result);
-                                            log.info("SIM swap executed successfully");
+                                            log.info("SIM swap check executed successfully");
                                         },
                                         error -> {
                                             action.setStatus(AgentAction.ActionStatus.FAILED);
                                             action.setError(error.getMessage());
-                                            log.error("SIM swap failed", error);
+                                            log.error("SIM swap check failed", error);
                                         }
                                 );
                     }

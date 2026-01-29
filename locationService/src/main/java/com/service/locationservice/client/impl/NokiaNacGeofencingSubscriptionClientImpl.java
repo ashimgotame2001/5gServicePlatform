@@ -2,6 +2,7 @@ package com.service.locationservice.client.impl;
 
 import com.service.locationservice.client.NokiaNacGeofencingSubscriptionClient;
 import com.service.shared.dto.request.CreateGeofencingSubscriptionDTO;
+import com.service.shared.service.NokiaNacTokenManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,7 @@ public class NokiaNacGeofencingSubscriptionClientImpl implements NokiaNacGeofenc
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
     @Value("${nokia.nac.rapidapi-key}")
     private String apiKey;
@@ -44,11 +46,13 @@ public class NokiaNacGeofencingSubscriptionClientImpl implements NokiaNacGeofenc
     public NokiaNacGeofencingSubscriptionClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
     private Retry createRetrySpec(int retryAttempts) {
@@ -88,16 +92,20 @@ public class NokiaNacGeofencingSubscriptionClientImpl implements NokiaNacGeofenc
 
     @Override
     public Mono<Map<String, Object>> createGeofencingSubscription(CreateGeofencingSubscriptionDTO request) {
-        log.info("Creating geofencing subscription for device: {}", 
-                request.getConfig() != null && 
-                request.getConfig().getSubscriptionDetail() != null &&
-                request.getConfig().getSubscriptionDetail().getDevice() != null ?
-                request.getConfig().getSubscriptionDetail().getDevice().getPhoneNumber() : "unknown");
+        log.info("Creating geofencing subscription for device: {}",
+                request.getConfig() != null &&
+                        request.getConfig().getSubscriptionDetail() != null &&
+                        request.getConfig().getSubscriptionDetail().getDevice() != null ?
+                        request.getConfig().getSubscriptionDetail().getDevice().getPhoneNumber() : "unknown");
+
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
 
         return webClient.post()
                 .uri(CREATE_SUBSCRIPTION_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", HOST)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -123,10 +131,14 @@ public class NokiaNacGeofencingSubscriptionClientImpl implements NokiaNacGeofenc
     public Mono<Map<String, Object>> getAllGeofencingSubscriptions() {
         log.info("Retrieving all geofencing subscriptions");
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+
         return webClient.get()
                 .uri(GET_ALL_SUBSCRIPTIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", HOST)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -151,10 +163,14 @@ public class NokiaNacGeofencingSubscriptionClientImpl implements NokiaNacGeofenc
     public Mono<Map<String, Object>> getGeofencingSubscriptionById(String subscriptionId) {
         log.info("Retrieving geofencing subscription by ID: {}", subscriptionId);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+
         return webClient.get()
                 .uri(GET_SUBSCRIPTION_BY_ID_PATH + subscriptionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", HOST)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -179,10 +195,14 @@ public class NokiaNacGeofencingSubscriptionClientImpl implements NokiaNacGeofenc
     public Mono<Map<String, Object>> deleteGeofencingSubscription(String subscriptionId) {
         log.info("Deleting geofencing subscription by ID: {}", subscriptionId);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+
         return webClient.delete()
                 .uri(DELETE_SUBSCRIPTION_PATH + subscriptionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", HOST)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)

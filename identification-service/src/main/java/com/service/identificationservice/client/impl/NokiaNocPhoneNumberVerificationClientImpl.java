@@ -2,6 +2,8 @@ package com.service.identificationservice.client.impl;
 
 import com.service.identificationservice.client.NokiaNocPhoneNumberVerificationClient;
 import com.service.shared.dto.request.PhoneVerificationRequest;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,13 +27,14 @@ public class NokiaNocPhoneNumberVerificationClientImpl implements NokiaNocPhoneN
     private static final String DEVICE_STATUS_PATH = "https://number-verification.p-eu.rapidapi.com/";
     private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "verify";
     private static final String PHONE_NUMBER_SHARE = DEVICE_STATUS_PATH + "device-phone-number";
-    private static final String host = "location-verification.p-eu.rapidapi.com";
+    private static final String host = "number-verification.nokia.rapidapi.com";
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
 
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
 
     @Value("${nokia.nac.rapidapi-key}")
@@ -40,20 +43,26 @@ public class NokiaNocPhoneNumberVerificationClientImpl implements NokiaNocPhoneN
     public NokiaNocPhoneNumberVerificationClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
 
     @Override
     public Mono<Map<String, Object>> verifyPhoneNumber(PhoneVerificationRequest request) {
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -77,10 +86,14 @@ public class NokiaNocPhoneNumberVerificationClientImpl implements NokiaNocPhoneN
 
     @Override
     public Mono<Map<String, Object>> sharePhoneNumber() {
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(CONNECTIVITY_STATUS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)

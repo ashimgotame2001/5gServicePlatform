@@ -4,11 +4,13 @@ import com.service.aiagentservice.agent.BaseAgent;
 import com.service.aiagentservice.agent.model.AgentAction;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +22,15 @@ import java.util.Map;
 public class TransportationAgent extends BaseAgent {
     
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
+    
+    @Value("${services.location.base-url:http://localhost:8083}")
+    private String locationServiceUrl;
+    
+    @Value("${services.identification.base-url:http://localhost:8082}")
+    private String identificationServiceUrl;
     
     public TransportationAgent(InternalServiceClient internalServiceClient) {
         super("transportation-agent", "Transportation & Logistics Agent",
@@ -39,7 +50,12 @@ public class TransportationAgent extends BaseAgent {
         // Monitor location for geofencing
         if (context.getNetworkData().getLocation() != null) {
             // Verify location for tracking
-            internalServiceClient.verifyLocation(context.getPhoneNumber())
+            Map<String, Object> locationRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            locationRequest.put("device", device);
+            
+            internalServiceClient.callService(locationServiceUrl, "/location/verify/v1", locationRequest)
                     .subscribe(
                             result -> {
                                 log.debug("Vehicle/asset location verified");
@@ -57,12 +73,12 @@ public class TransportationAgent extends BaseAgent {
             log.warn("Transportation device disconnected: {}", context.getPhoneNumber());
             
             // Request QoS for reconnection
-            Map<String, Object> qosRequest = Map.of(
-                    "phoneNumber", context.getPhoneNumber(),
-                    "priority", 2,
-                    "bandwidth", 25.0,
-                    "reason", "TRANSPORTATION_TRACKING"
-            );
+            Map<String, Object> qosRequest = new HashMap<>();
+            Map<String, Object> device = new HashMap<>();
+            device.put("phoneNumber", context.getPhoneNumber());
+            qosRequest.put("device", device);
+            qosRequest.put("qosProfile", "HIGH_BANDWIDTH");
+            qosRequest.put("duration", 3600);
             
             AgentAction action = AgentAction.builder()
                     .actionType("TRANSPORTATION_QOS")
@@ -71,7 +87,7 @@ public class TransportationAgent extends BaseAgent {
                     .status(AgentAction.ActionStatus.PENDING)
                     .build();
             
-            internalServiceClient.requestQoSAdjustment(qosRequest)
+            internalServiceClient.callService(connectivityServiceUrl, "/connectivity/Qos/sessions/create", qosRequest)
                     .subscribe(
                             result -> {
                                 action.setStatus(AgentAction.ActionStatus.SUCCESS);
@@ -89,7 +105,8 @@ public class TransportationAgent extends BaseAgent {
         }
         
         // Monitor device status for fleet management
-        internalServiceClient.getDeviceStatus(context.getPhoneNumber())
+        internalServiceClient.getFromService(identificationServiceUrl, 
+                "/identification/share-phone-number?phoneNumber=" + context.getPhoneNumber())
                 .subscribe(
                         status -> {
                             boolean isActive = Boolean.TRUE.equals(status.getOrDefault("isActive", false));

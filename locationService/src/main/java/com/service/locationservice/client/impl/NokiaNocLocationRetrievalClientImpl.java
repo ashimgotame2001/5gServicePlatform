@@ -2,6 +2,8 @@ package com.service.locationservice.client.impl;
 
 import com.service.locationservice.client.NokiaNocLocationRetrievalClient;
 import com.service.shared.dto.request.LocationRetrievalDTO;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,15 +24,17 @@ import java.util.Map;
 @Slf4j
 public class NokiaNocLocationRetrievalClientImpl implements NokiaNocLocationRetrievalClient {
 
-    private static final String DEVICE_STATUS_PATH = "https://location-retrieval.p-eu.rapidapi.com/";
-    private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "retrieve";
+    private static final String BASE_URL = "https://location-retrieval.p-eu.rapidapi.com";
+    private static final String LOCATION_RETRIEVAL_PATH = BASE_URL + "/v0/retrieve";
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
-    private static final String host ="location-retrieval.p-eu.rapidapi.com";
+    // RapidAPI host header format: {service}.nokia.rapidapi.com or {service}.p-eu.rapidapi.com
+    private static final String HOST = "location-retrieval.nokia.rapidapi.com";
 
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
 
     @Value("${nokia.nac.rapidapi-key}")
@@ -39,11 +43,14 @@ public class NokiaNocLocationRetrievalClientImpl implements NokiaNocLocationRetr
     public NokiaNocLocationRetrievalClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts, com.service.shared.util.ClientUtil clientUtil
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            com.service.shared.util.ClientUtil clientUtil,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
     public Retry createRetrySpec(int retryAttempts) {
@@ -83,10 +90,25 @@ public class NokiaNocLocationRetrievalClientImpl implements NokiaNocLocationRetr
 
     @Override
     public Mono<Map<String, Object>> retriveLocation(LocationRetrievalDTO request) {
-        return webClient.post()
-                .uri(CONNECTIVITY_STATUS_PATH)
+        // Use mutate() to create a new WebClient instance without default headers
+        // This ensures we use the correct host header for this specific endpoint
+        WebClient locationWebClient = webClient.mutate()
+                .baseUrl("") // Clear base URL since we're using absolute URI
+                .defaultHeaders(headers -> {
+                    headers.remove("x-rapidapi-key");
+                    headers.remove("x-rapidapi-host");
+                })
+                .build();
+        
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
+        return locationWebClient.post()
+                .uri(LOCATION_RETRIEVAL_PATH)
                 .header("X-RapidAPI-Key", apiKey)
-                .header("X-RapidAPI-Host", host)
+                .header("X-RapidAPI-Host", HOST)
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -95,15 +117,15 @@ public class NokiaNocLocationRetrievalClientImpl implements NokiaNocLocationRetr
                 .map(map -> (Map<String, Object>) map)
                 .timeout(timeout)
                 .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
-                .doOnError(error -> log.error("Failed to get device connectivity status", error))
+                .doOnSuccess(result -> log.info("Retrieved location successfully: {}", result))
+                .doOnError(error -> log.error("Failed to retrieve location", error))
                 .onErrorMap(throwable -> {
                     if (throwable instanceof com.service.shared.exception.GlobalException) {
                         return throwable;
                     }
                     return new com.service.shared.exception.GlobalException(
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to get device connectivity status: " + throwable.getMessage(),
+                            "Failed to retrieve location: " + throwable.getMessage(),
                             throwable);
                 });
     }
@@ -113,13 +135,24 @@ public class NokiaNocLocationRetrievalClientImpl implements NokiaNocLocationRetr
         return response.bodyToMono(String.class)
                 .defaultIfEmpty("No error body")
                 .flatMap(errorBody -> {
-                    log.error("Nokia NAC API error - Status: {}, Body: {}, Headers: {}",
-                            statusCode, errorBody, response.headers().asHttpHeaders());
+                    log.error("Nokia NAC Location Retrieval API error - Status: {}, Body: {}, Request Headers: {}, Response Headers: {}",
+                            statusCode, errorBody, 
+                            response.request().getHeaders(),
+                            response.headers().asHttpHeaders());
+
+                    // Log full error body for 403 errors to help diagnose authentication issues
+                    if (statusCode.value() == 403) {
+                        log.error("403 Forbidden - Full error response: {}", errorBody);
+                        log.error("API Key used: {} (length: {})", 
+                                apiKey != null ? apiKey.substring(0, Math.min(10, apiKey.length())) + "..." : "null",
+                                apiKey != null ? apiKey.length() : 0);
+                        log.error("Host header used: {}", HOST);
+                    }
 
                     String errorMessage = String.format(
-                            "Nokia NAC API error [%s]: %s",
+                            "Nokia NAC Location Retrieval API error [%s]: %s",
                             statusCode,
-                            errorBody.length() > 200 ? errorBody.substring(0, 200) + "..." : errorBody
+                            errorBody.length() > 500 ? errorBody.substring(0, 500) + "..." : errorBody
                     );
 
                     com.service.shared.exception.GlobalException exception = new com.service.shared.exception.GlobalException(
@@ -133,7 +166,7 @@ public class NokiaNocLocationRetrievalClientImpl implements NokiaNocLocationRetr
                     log.error("Failed to read error response body", throwable);
                     com.service.shared.exception.GlobalException exception = new com.service.shared.exception.GlobalException(
                             statusCode.value(),
-                            String.format("Nokia NAC API error [%s]: Unable to read error response", statusCode),
+                            String.format("Nokia NAC Location Retrieval API error [%s]: Unable to read error response", statusCode),
                             throwable
                     );
                     return Mono.<Throwable>error(exception);

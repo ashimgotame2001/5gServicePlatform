@@ -5,11 +5,13 @@ import com.service.aiagentservice.agent.model.AgentAction;
 import com.service.aiagentservice.agent.model.AgentContext;
 import com.service.aiagentservice.agent.model.AgentResult;
 import com.service.aiagentservice.service.DecisionEngine;
-import com.service.aiagentservice.service.InternalServiceClient;
+import com.service.shared.service.InternalServiceClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +24,9 @@ public class QoSOptimizationAgent extends BaseAgent {
     
     private final DecisionEngine decisionEngine;
     private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
     
     public QoSOptimizationAgent(DecisionEngine decisionEngine, InternalServiceClient internalServiceClient) {
         super("qos-optimization-agent", "QoS Optimization Agent", 
@@ -49,16 +54,17 @@ public class QoSOptimizationAgent extends BaseAgent {
             // Execute actions
             for (AgentAction action : decision.getActions()) {
                 try {
-                    // Prepare QoS request
-                    Map<String, Object> qosRequest = Map.of(
-                            "phoneNumber", context.getPhoneNumber(),
-                            "priority", action.getParameters().getOrDefault("priority", 1),
-                            "bandwidth", action.getParameters().getOrDefault("bandwidth", 50.0),
-                            "latency", action.getParameters().getOrDefault("latency", 50)
-                    );
+                    // Prepare QoS request for creating a QoS session
+                    Map<String, Object> device = new HashMap<>();
+                    device.put("phoneNumber", context.getPhoneNumber());
                     
-                    // Execute the action
-                    internalServiceClient.requestQoSAdjustment(qosRequest)
+                    Map<String, Object> qosRequest = new HashMap<>();
+                    qosRequest.put("device", device);
+                    qosRequest.put("qosProfile", "HIGH_BANDWIDTH");
+                    qosRequest.put("duration", 3600);
+                    
+                    // Execute the action using shared module's InternalServiceClient
+                    internalServiceClient.callService(connectivityServiceUrl, "/connectivity/Qos/sessions/create", qosRequest)
                             .subscribe(
                                     result -> {
                                         action.setStatus(AgentAction.ActionStatus.SUCCESS);

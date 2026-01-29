@@ -4,6 +4,8 @@ import com.service.connectivityservice.client.NokiaNacQosClient;
 import com.service.shared.dto.request.CreateSessionRequestDTO;
 import com.service.shared.dto.request.DeviceRequestDTO;
 import com.service.shared.exception.GlobalException;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,7 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
     @Value("${nokia.nac.base-url}")
     private String nokiaBaseUrl;
@@ -45,9 +48,11 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
     public NokiaNacQosClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
+        this.tokenManager = tokenManager;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
     }
@@ -96,10 +101,14 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
     public Mono<Map<String, Object>> createSession(CreateSessionRequestDTO requestDTO) {
 
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(QOD_SESSIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(requestDTO)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -126,10 +135,14 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
     public Mono<Map<String, Object>> getSessions() {
         log.debug("Fetching all QoD sessions");
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(QOD_SESSIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -155,10 +168,14 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
     public Mono<Map<String, Object>> retrieveSessions(DeviceRequestDTO request) {
 
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(QOD_SESSIONS_PATH)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -208,10 +225,14 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
 
         log.debug("Fetching QoD session with ID: {}", sessionId);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.get()
                 .uri(QOD_SESSIONS_PATH + "/{id}", sessionId)
                 .header("X-RapidAPI-Key", apiKey)
                 .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(Map.class)
@@ -250,8 +271,14 @@ public class NokiaNacQosClientImpl implements NokiaNacQosClient {
 
         log.debug("Making POST request to endpoint: {} with body: {}", endpoint, requestBody);
 
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
         return webClient.post()
                 .uri(endpoint)
+                .header("X-RapidAPI-Key", apiKey)
+                .header("X-RapidAPI-Host", host)
+                .header("Authorization", "Bearer " + accessToken)
                 .bodyValue(requestBody)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)

@@ -1,11 +1,12 @@
 package com.service.locationservice.client.impl;
 
 import com.service.locationservice.client.NokiaNocLocationVerificationClient;
+import com.service.shared.service.NokiaNacTokenManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.codec.DecodingException;
-import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -22,17 +23,19 @@ import java.util.Map;
 @Slf4j
 public class NokiaNocLocationVerificationClientImpl implements NokiaNocLocationVerificationClient {
 
-    private static final String DEVICE_STATUS_PATH = "https://location-verification.p-eu.rapidapi.com/";
-    private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "v1/verify";
-    private static final String CONNECTIVITY_STATUS_PATH_V2 = DEVICE_STATUS_PATH + "v2/verify";
-    private static final String CONNECTIVITY_STATUS_PATH_v3 = DEVICE_STATUS_PATH + "v3/verify";
-    private static final String host = "location-verification.p-eu.rapidapi.com";
+    private static final String BASE_URL = "https://location-verification.p-eu.rapidapi.com";
+    private static final String CONNECTIVITY_STATUS_PATH = BASE_URL + "/v1/verify";
+    private static final String CONNECTIVITY_STATUS_PATH_V2 = BASE_URL + "/v2/verify";
+    private static final String CONNECTIVITY_STATUS_PATH_v3 = BASE_URL + "/v3/verify";
+    // RapidAPI host header format: {service}.nokia.rapidapi.com
+    private static final String HOST = "location-verification.nokia.rapidapi.com";
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
 
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
+    private final NokiaNacTokenManager tokenManager;
 
 
     @Value("${nokia.nac.rapidapi-key}")
@@ -41,11 +44,14 @@ public class NokiaNocLocationVerificationClientImpl implements NokiaNocLocationV
     public NokiaNocLocationVerificationClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts, com.service.shared.util.ClientUtil clientUtil
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts,
+            com.service.shared.util.ClientUtil clientUtil,
+            NokiaNacTokenManager tokenManager
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
         this.retrySpec = createRetrySpec(retryAttempts);
+        this.tokenManager = tokenManager;
     }
 
 
@@ -56,10 +62,26 @@ public class NokiaNocLocationVerificationClientImpl implements NokiaNocLocationV
             case "v3" -> CONNECTIVITY_STATUS_PATH_v3;
             default -> CONNECTIVITY_STATUS_PATH;
         };
-        return webClient.post()
+        
+        // Use mutate() to create a new WebClient instance without default headers
+        // This ensures we use the correct host header for this specific endpoint
+        WebClient locationWebClient = webClient.mutate()
+                .baseUrl("") // Clear base URL since we're using absolute URI
+                .defaultHeaders(headers -> {
+                    headers.remove("x-rapidapi-key");
+                    headers.remove("x-rapidapi-host");
+                })
+                .build();
+        
+        // Get OAuth2 access token
+        String accessToken = tokenManager.getAccessToken();
+        
+        return locationWebClient.post()
                 .uri(url)
                 .header("X-RapidAPI-Key", apiKey)
-                .header("X-RapidAPI-Host", host)
+                .header("X-RapidAPI-Host", HOST)
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
                 .bodyValue(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::handleError)
@@ -68,15 +90,15 @@ public class NokiaNocLocationVerificationClientImpl implements NokiaNocLocationV
                 .map(map -> (Map<String, Object>) map)
                 .timeout(timeout)
                 .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
-                .doOnError(error -> log.error("Failed to get device connectivity status", error))
+                .doOnSuccess(result -> log.info("Location verified successfully: {}", result))
+                .doOnError(error -> log.error("Failed to verify location", error))
                 .onErrorMap(throwable -> {
                     if (throwable instanceof com.service.shared.exception.GlobalException) {
                         return throwable;
                     }
                     return new com.service.shared.exception.GlobalException(
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to get device connectivity status: " + throwable.getMessage(),
+                            "Failed to verify location: " + throwable.getMessage(),
                             throwable);
                 });
     }
