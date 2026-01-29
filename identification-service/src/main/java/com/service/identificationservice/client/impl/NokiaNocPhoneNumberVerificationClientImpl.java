@@ -1,8 +1,7 @@
-package com.service.devicemanagementservice.client.impl;
+package com.service.identificationservice.client.impl;
 
-import com.service.devicemanagementservice.client.NokiaNacDeviceSwapClient;
-import com.service.shared.dto.request.CheckDeviceSwap;
-import com.service.shared.dto.request.DeviceDTO;
+import com.service.identificationservice.client.NokiaNocPhoneNumberVerificationClient;
+import com.service.shared.dto.request.PhoneVerificationRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,21 +20,24 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
+public class NokiaNocPhoneNumberVerificationClientImpl implements NokiaNocPhoneNumberVerificationClient {
 
-    private static final String DEVICE_STATUS_PATH = "https://device-swap.p-eu.rapidapi.com/";
-    private static final String host = "device-swap.nokia.rapidapi.com";
-    private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "retrieve-date";
+    private static final String DEVICE_STATUS_PATH = "https://number-verification.p-eu.rapidapi.com/";
+    private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "verify";
+    private static final String PHONE_NUMBER_SHARE = DEVICE_STATUS_PATH + "device-phone-number";
+    private static final String host = "location-verification.p-eu.rapidapi.com";
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
+
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
 
+
     @Value("${nokia.nac.rapidapi-key}")
     private String apiKey;
 
-    public NokiaNacDeviceSwapClientImpl(
+    public NokiaNocPhoneNumberVerificationClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
             @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
@@ -45,7 +47,61 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
         this.retrySpec = createRetrySpec(retryAttempts);
     }
 
-    private Retry createRetrySpec(int retryAttempts) {
+
+    @Override
+    public Mono<Map<String, Object>> verifyPhoneNumber(PhoneVerificationRequest request) {
+        return webClient.post()
+                .uri(CONNECTIVITY_STATUS_PATH)
+                .header("X-RapidAPI-Key", apiKey)
+                .header("X-RapidAPI-Host", host)
+                .bodyValue(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Map.class)
+                .cast(Map.class)
+                .map(map -> (Map<String, Object>) map)
+                .timeout(timeout)
+                .retryWhen(retrySpec)
+                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
+                .doOnError(error -> log.error("Failed to get device connectivity status", error))
+                .onErrorMap(throwable -> {
+                    if (throwable instanceof com.service.shared.exception.GlobalException) {
+                        return throwable;
+                    }
+                    return new com.service.shared.exception.GlobalException(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "Failed to get device connectivity status: " + throwable.getMessage(),
+                            throwable);
+                });
+    }
+
+    @Override
+    public Mono<Map<String, Object>> sharePhoneNumber() {
+        return webClient.get()
+                .uri(CONNECTIVITY_STATUS_PATH)
+                .header("X-RapidAPI-Key", apiKey)
+                .header("X-RapidAPI-Host", host)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(Map.class)
+                .cast(Map.class)
+                .map(map -> (Map<String, Object>) map)
+                .timeout(timeout)
+                .retryWhen(retrySpec)
+                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
+                .doOnError(error -> log.error("Failed to get device connectivity status", error))
+                .onErrorMap(throwable -> {
+                    if (throwable instanceof com.service.shared.exception.GlobalException) {
+                        return throwable;
+                    }
+                    return new com.service.shared.exception.GlobalException(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "Failed to get device connectivity status: " + throwable.getMessage(),
+                            throwable);
+                });
+    }
+
+    public Retry createRetrySpec(int retryAttempts) {
         return Retry.fixedDelay(retryAttempts, RETRY_DELAY)
                 .filter(this::isRetryableError)
                 .doBeforeRetry(retrySignal ->
@@ -62,7 +118,7 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
                 });
     }
 
-    private boolean isRetryableError(Throwable throwable) {
+    public boolean isRetryableError(Throwable throwable) {
         if (throwable instanceof IllegalArgumentException ||
                 throwable instanceof DecodingException) {
             return false;
@@ -78,78 +134,6 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
         }
 
         return !(throwable instanceof DecodingException);
-    }
-
-    @Override
-    public Mono<Map<String, Object>> retrieveDeviceSwapDate(DeviceDTO device) {
-        if (device == null) {
-            return Mono.error(new com.service.shared.exception.GlobalException(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "Device connectivity status request cannot be null"
-            ));
-        }
-
-        log.debug("Fetching device connectivity status for device: {}", device.getPhoneNumber());
-
-        return webClient.post()
-                .uri(CONNECTIVITY_STATUS_PATH)
-                .header("X-RapidAPI-Key", apiKey)
-                .header("X-RapidAPI-Host", host)
-                .bodyValue(device)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToMono(Map.class)
-                .cast(Map.class)
-                .map(map -> (Map<String, Object>) map)
-                .timeout(timeout)
-                .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
-                .doOnError(error -> log.error("Failed to get device connectivity status", error))
-                .onErrorMap(throwable -> {
-                    if (throwable instanceof com.service.shared.exception.GlobalException) {
-                        return throwable;
-                    }
-                    return new com.service.shared.exception.GlobalException(
-                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to get device connectivity status: " + throwable.getMessage(),
-                            throwable);
-                });
-    }
-
-    @Override
-    public Mono<Map<String, Object>> CheckDeviceSwap(CheckDeviceSwap swap) {
-        if (swap == null) {
-            return Mono.error(new com.service.shared.exception.GlobalException(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "Device connectivity status request cannot be null"
-            ));
-        }
-
-        log.debug("Fetching device connectivity status for device: {}", swap.getPhoneNumber());
-
-        return webClient.post()
-                .uri(CONNECTIVITY_STATUS_PATH)
-                .header("X-RapidAPI-Key", apiKey)
-                .header("X-RapidAPI-Host", host)
-                .bodyValue(swap)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::handleError)
-                .bodyToMono(Map.class)
-                .cast(Map.class)
-                .map(map -> (Map<String, Object>) map)
-                .timeout(timeout)
-                .retryWhen(retrySpec)
-                .doOnSuccess(result -> log.info("Retrieved device connectivity status successfully: {}", result))
-                .doOnError(error -> log.error("Failed to get device connectivity status", error))
-                .onErrorMap(throwable -> {
-                    if (throwable instanceof com.service.shared.exception.GlobalException) {
-                        return throwable;
-                    }
-                    return new com.service.shared.exception.GlobalException(
-                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to get device connectivity status: " + throwable.getMessage(),
-                            throwable);
-                });
     }
 
     private Mono<? extends Throwable> handleError(ClientResponse response) {
@@ -174,7 +158,6 @@ public class NokiaNacDeviceSwapClientImpl implements NokiaNacDeviceSwapClient {
                     return Mono.<Throwable>error(exception);
                 })
                 .onErrorResume(throwable -> {
-                    // If we can't read the error body, still return an error
                     log.error("Failed to read error response body", throwable);
                     com.service.shared.exception.GlobalException exception = new com.service.shared.exception.GlobalException(
                             statusCode.value(),

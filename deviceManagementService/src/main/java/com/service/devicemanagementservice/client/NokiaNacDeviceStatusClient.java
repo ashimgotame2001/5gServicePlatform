@@ -12,7 +12,4 @@ public interface NokiaNacDeviceStatusClient {
     Mono<Map<String, Object>> createDeviceStatusSubscription(com.service.shared.dto.CreateDeviceStatusSubscriptionDTO request);
     Mono<Map<String, Object>> getSubscriptionById(String SubscriptionId);
 
-
-//    Mono<Map<String, Object>> deviceSwapRetrievalData(Device);
-
 }

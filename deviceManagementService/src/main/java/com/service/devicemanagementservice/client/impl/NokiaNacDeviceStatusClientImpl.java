@@ -7,23 +7,18 @@ import com.service.shared.exception.GlobalException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.codec.DecodingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.Map;
 
-/**
- * Implementation of Nokia Network as Code API client
- * Handles Device Status and Subscription management
- */
+
 @Slf4j
 @Service
 public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClient {
@@ -32,64 +27,28 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
     private static final String CONNECTIVITY_STATUS_PATH = DEVICE_STATUS_PATH + "connectivity";
     private static final String ROAMING_STATUS_PATH = DEVICE_STATUS_PATH + "roaming";
     private static final String SUBSCRIPTIONS_PATH = DEVICE_STATUS_PATH + "subscriptions";
-    private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
+    private static final String host ="device-status.nokia.rapidapi.com";
+
 
     private final WebClient webClient;
     private final Retry retrySpec;
     private final Duration timeout;
 
 
-    private static final String host ="device-status.nokia.rapidapi.com";
     @Value("${nokia.nac.rapidapi-key}")
     private String apiKey;
 
     public NokiaNacDeviceStatusClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts, com.service.shared.util.ClientUtil clientUtil
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
-        this.retrySpec = createRetrySpec(retryAttempts);
+        this.retrySpec = clientUtil.createRetrySpec(retryAttempts);
     }
 
-    private Retry createRetrySpec(int retryAttempts) {
-        return Retry.fixedDelay(retryAttempts, RETRY_DELAY)
-                .filter(this::isRetryableError)
-                .doBeforeRetry(retrySignal ->
-                        log.warn("Retrying Nokia NAC API call. Attempt: {}/{}",
-                                retrySignal.totalRetries() + 1, retryAttempts))
-                .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-                    Throwable failure = retrySignal.failure();
-                    log.error("Nokia NAC API retry exhausted after {} attempts", retryAttempts, failure);
-                    return new GlobalException(
-                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            String.format("Nokia NAC API retry exhausted after %d attempts: %s",
-                                    retryAttempts, failure.getMessage()),
-                            failure);
-                });
-    }
 
-    private boolean isRetryableError(Throwable throwable) {
-        // Don't retry on client errors (4xx), deserialization errors, or illegal arguments
-        if (throwable instanceof IllegalArgumentException ||
-                throwable instanceof DecodingException) {
-            return false;
-        }
-
-        if (throwable instanceof WebClientResponseException webClientException) {
-            HttpStatusCode statusCode = webClientException.getStatusCode();
-            if (statusCode != null) {
-                // Only retry on server errors (5xx) and specific network errors
-                return statusCode.is5xxServerError() ||
-                        statusCode.value() == HttpStatus.REQUEST_TIMEOUT.value() ||
-                        statusCode.value() == HttpStatus.SERVICE_UNAVAILABLE.value();
-            }
-        }
-
-        // Retry on network/connection errors, but not on deserialization or validation errors
-        return !(throwable instanceof DecodingException);
-    }
 
     @Override
     @SuppressWarnings("unchecked")

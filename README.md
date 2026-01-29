@@ -49,6 +49,21 @@ The platform consists of **7 microservices**:
 
 ## Quick Start
 
+### 0. Postman Collection
+
+Import the Postman collection to test all API endpoints:
+- **Collection**: `5G-Service-Platform.postman_collection.json`
+- **Environment**: `5G-Service-Platform.postman_environment.json` (optional)
+
+The collection includes:
+- All authentication endpoints
+- All service endpoints (Connectivity, Identification, Location, Device Management)
+- AI Agent endpoints
+- Nokia NAC Metadata endpoints
+- Monitoring and actuator endpoints
+
+**Note**: Set the `baseUrl` variable to `http://localhost:8080` (or your API Gateway URL) in the Postman environment.
+
 ### 1. Database Setup
 
 #### PostgreSQL
@@ -213,21 +228,38 @@ All requests should go through the API Gateway:
 - `POST /auth/login` - Login and get JWT token
 
 #### Connectivity Service
-- `POST /connectivity/qos-request` - Request QoS adjustment
-- `GET /connectivity/status` - Get connectivity status
+- `POST /connectivity/Qos/sessions` - Retrieve QoS sessions by phone number
+- `POST /connectivity/Qos/sessions/create` - Create QoS session
+- `GET /connectivity/Qos/sessions/{id}` - Get QoS session by ID
+- `GET /connectivity/health` - Health check
 
 #### Identification Service
 - `POST /identification/verify-number` - Verify phone number
-- `POST /identification/kyc-check` - Perform KYC check
-- `GET /identification/device-status` - Get device status
+- `GET /identification/share-phone-number` - Get device phone number
+- `GET /identification/health` - Health check
 
 #### Location Service
-- `GET /location/verify` - Verify location
-- `GET /location/geofence-alerts` - Get geo-fence alerts
+- `POST /location/verify` - Verify device location (with optional version parameter)
+- `POST /location/verify/v1` - Verify device location (v1 API)
+- `POST /location/verify/v2` - Verify device location (v2 API)
+- `POST /location/verify/v3` - Verify device location (v3 API)
+- `POST /location/retrieve` - Retrieve device location
+- `GET /location/health` - Health check
 
 #### Device Management Service
-- `POST /device/swap-sim` - Swap SIM card
-- `POST /device/swap-device` - Swap device
+- `POST /device/status/connectivity` - Get device connectivity status
+- `POST /device/status/roaming` - Get device roaming status
+- `GET /device/subscriptions` - Get all device status subscriptions
+- `POST /device/subscriptions` - Create device status subscription
+- `GET /device/subscriptions/{subscriptionId}` - Get subscription by ID
+- `POST /device/swap/retrieve-date` - Retrieve device swap date
+- `POST /device/swap/check` - Check device swap
+- `GET /device/health` - Health check
+
+#### Nokia NAC Metadata (Shared Module)
+- `GET /nokia-nac/metadata/openid-configuration` - Get OpenID configuration metadata
+- `GET /nokia-nac/metadata/security.txt` - Get security.txt
+- `GET /nokia-nac/metadata/oauth-authorization-server` - Get OAuth authorization server metadata
 
 #### AI Agent Service
 - `POST /ai-agents/execute/{phoneNumber}` - Execute all agents for a device
@@ -246,21 +278,57 @@ All requests should go through the API Gateway:
 
 ### ✅ Network APIs
 - **Quality of Service on Demand (QoD)**: Autonomous QoS optimization
+  - Create QoS sessions
+  - Retrieve sessions by phone number
+  - Get session by ID
 - **Network Slice Management**: Dynamic slice allocation
 
 ### ✅ Location APIs
-- **Location Verification**: Real-time location verification
+- **Location Verification**: Real-time location verification (v1, v2, v3)
+  - Verify device location with area definition
+  - Support for multiple API versions
+- **Location Retrieval**: Get current device location
 - **Geofencing**: Geofence monitoring and alerts
 - **Population Density**: Analysis via location data
 
 ### ✅ Identity & Security APIs
 - **Number Verification**: Phone number validation
+  - Verify phone number
+  - Share/get device phone number
 - **SIM Swap Detection**: Automatic detection and response
 - **Device Status**: Real-time device health monitoring
+  - Connectivity status
+  - Roaming status
+  - Device status subscriptions
+
+### ✅ Device Management APIs
+- **Device Swap**: Device swap detection and management
+  - Retrieve device swap date
+  - Check device swap status
+- **Device Status Subscriptions**: Subscribe to device status updates
+
+### ✅ Metadata APIs
+- **OpenID Configuration**: Get OpenID configuration metadata
+- **Security.txt**: Get security information
+- **OAuth Authorization Server**: Get OAuth authorization server metadata
 
 ### ✅ Network Insights
 - **Congestion Data**: Network congestion monitoring
 - **Device Reachability**: Connectivity and reachability tracking
+
+## Emergency Connectivity Setup
+
+The platform includes comprehensive support for **Guaranteed 5G Connectivity for Emergency Services**. See [EMERGENCY_CONNECTIVITY_SETUP.md](EMERGENCY_CONNECTIVITY_SETUP.md) for complete setup instructions.
+
+### Key Features:
+- **Emergency Context Detection**: Automatic detection from geofence, SOS button, or external systems
+- **Event-Driven Architecture**: Kafka-based event broadcasting for parallel processing
+- **Trust & Authorization**: Device identity and SIM integrity validation
+- **Network State Assessment**: Real-time network condition evaluation
+- **AI Decision Engine**: Autonomous decision-making with explainability
+- **Network Orchestration**: Guaranteed connectivity execution via Network as Code
+- **Continuous Monitoring**: Real-time metrics and automatic remediation
+- **Audit & Compliance**: Complete audit trail for regulatory compliance
 
 ## Use Cases
 
@@ -279,6 +347,9 @@ All requests should go through the API Gateway:
 - Maximum QoS priority allocation
 - Device reachability verification
 - Network congestion monitoring
+- **Guaranteed Connectivity**: < 1 second QoS activation for emergency services
+- **Trust Validation**: Only verified emergency devices get priority
+- **Autonomous Decision Making**: AI-powered emergency response
 
 ### 3. Healthcare - Remote Patient Monitoring
 **Agent**: Healthcare Monitoring Agent  
@@ -377,8 +448,20 @@ Resilience4j circuit breakers are configured for all services:
 ├── identification-service/  # Number Verification, Device Status
 ├── locationService/         # Location Verification, Geofencing
 ├── deviceManagementService/ # SIM Swap, Device Swap
-└── ai-agent-service/        # Intelligent AI Agents ⭐
+├── ai-agent-service/        # Intelligent AI Agents ⭐
+└── shared-module/           # Shared DTOs, utilities, and common services
 ```
+
+### Shared Module
+
+The `shared-module` contains common components used across all microservices:
+
+- **DTOs**: Common data transfer objects (DeviceDTO, LocationVerificationDto, etc.)
+- **Client Interfaces**: Nokia NAC client interfaces and implementations
+- **Services**: Shared service interfaces (EmergencyContextService, TrustValidationService, etc.)
+- **Event Producers**: Kafka event producers (EmergencyEventProducer)
+- **Configuration**: Common configurations (Kafka, Security, etc.)
+- **Utilities**: Common utility classes and annotations
 
 ### Adding New Agents
 
