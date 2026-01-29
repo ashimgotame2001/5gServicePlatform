@@ -16,7 +16,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Explicitly disable static resource handling for gateway paths
         // This prevents Spring MVC from trying to serve gateway routes as static resources
-        // Gateway routes: /auth/**, /connectivity/**, /identification/**, /location/**, /device/**, /ai-agents/**, /.well-known/**
+        // Gateway routes: /auth/**, /connectivity/**, /identification/**, /location/**, /device/**, /decision-engine/**, /.well-known/**
         registry.setOrder(Integer.MAX_VALUE);
         
         // Only allow static resources for actuator endpoints if needed

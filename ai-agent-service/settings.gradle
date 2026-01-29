@@ -1,4 +1,0 @@
-rootProject.name = 'ai-agent-service'
-
-include 'shared-module'
-project(':shared-module').projectDir = file('../shared-module')

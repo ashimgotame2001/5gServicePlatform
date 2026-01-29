@@ -11,7 +11,7 @@
 7. [Security Architecture](#security-architecture)
 8. [Communication Patterns](#communication-patterns)
 9. [Data Architecture](#data-architecture)
-10. [AI Agent Architecture](#ai-agent-architecture)
+10. [Decision Engine Architecture](#decision-engine-architecture)
 11. [Deployment Architecture](#deployment-architecture)
 12. [Scalability & Performance](#scalability--performance)
 13. [Integration Points](#integration-points)
@@ -38,7 +38,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 │  │  • Circuit Breakers                                      │   │
 │  │  • Request/Response Transformation                       │   │
 │  │  • Routes: /auth, /connectivity, /identification,       │   │
-│  │            /location, /device, /ai-agents, /nokia-nac  │   │
+│  │            /location, /device, /decision-engine, /nokia-nac  │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────────┘
                              │
@@ -55,7 +55,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
         │                    │                    │
         ▼                    ▼                    ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  Location    │    │   Device     │    │   AI Agent   │
+│  Location    │    │   Device     │    │   Decision Engine   │
 │  Service     │    │ Management   │    │   Service    │
 │  (8083)      │    │  Service     │    │   (8086)     │
 └──────────────┘    └──────────────┘    └──────────────┘
@@ -94,7 +94,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
   - **Identity Domain**: Identification Service
   - **Location Domain**: Location Service
   - **Device Domain**: Device Management Service
-  - **Intelligence Domain**: AI Agent Service
+  - **Intelligence Domain**: Decision Engine Service
   - **Shared Domain**: Shared Module (common components)
 
 ### 3. Event-Driven Architecture
@@ -144,7 +144,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - `/identification/**` → Identification Service (8082)
 - `/location/**` → Location Service (8083)
 - `/device/**` → Device Management Service (8084)
-- `/ai-agents/**` → AI Agent Service (8086)
+- `/decision-engine/**` → Decision Engine Service (8086)
 - `/nokia-nac/**` → Connectivity Service (8081) - Nokia NAC Metadata
 
 #### 2. Auth Service (Port 8085)
@@ -272,7 +272,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - `POST /device/swap/retrieve-date` - Retrieve device swap date
 - `POST /device/swap/check` - Check device swap
 
-#### 7. AI Agent Service (Port 8086) ⭐
+#### 7. Decision Engine Service (Port 8086) ⭐
 **Purpose**: Intelligent autonomous agents for network optimization
 
 **Responsibilities**:
@@ -313,11 +313,11 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 
 ## Component Architecture
 
-### AI Agent Service - Detailed Architecture
+### Decision Engine Service - Detailed Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    AI Agent Service                          │
+│                    Decision Engine Service                          │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │           Agent Orchestration Service                │   │
@@ -395,7 +395,7 @@ Service Routing
     ├──► Identification Service
     ├──► Location Service
     ├──► Device Management Service
-    ├──► AI Agent Service
+    ├──► Decision Engine Service
     └──► Nokia NAC Metadata (via Connectivity Service)
     │
     ▼
@@ -409,7 +409,7 @@ Service Processing
 Response to Client
 ```
 
-### AI Agent Execution Flow
+### Decision Engine Execution Flow
 
 ```
 Agent Orchestration Service
@@ -616,7 +616,7 @@ Return Agent Results
   - Device information
   - Network preferences
 
-#### Network Data (AI Agent Service)
+#### Network Data (Decision Engine Service)
 - Connectivity metrics
 - Location data
 - Device status
@@ -640,7 +640,7 @@ Service Operations
             • Event logs
 ```
 
-## AI Agent Architecture
+## Decision Engine Architecture
 
 ### Agent Framework
 
@@ -744,7 +744,7 @@ Agent Interface
 ### Performance Optimizations
 
 1. **Connection Pooling**: HikariCP for database connections
-2. **Caching**: Network data caching in AI Agent Service
+2. **Caching**: Network data caching in Decision Engine Service
 3. **Async Processing**: Reactive programming with WebFlux
 4. **Batch Processing**: Kafka batch consumption
 5. **Circuit Breakers**: Prevent cascading failures

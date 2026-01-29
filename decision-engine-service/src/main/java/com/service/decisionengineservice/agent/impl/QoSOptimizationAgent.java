@@ -1,0 +1,113 @@
+package com.service.decisionengineservice.agent.impl;
+
+import com.service.decisionengineservice.agent.BaseAgent;
+import com.service.decisionengineservice.agent.model.AgentAction;
+import com.service.decisionengineservice.agent.model.AgentContext;
+import com.service.decisionengineservice.agent.model.AgentResult;
+import com.service.decisionengineservice.service.DecisionEngine;
+import com.service.shared.service.InternalServiceClient;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Agent that autonomously optimizes QoS based on real network conditions
+ */
+@Slf4j
+@Component
+public class QoSOptimizationAgent extends BaseAgent {
+    
+    private final DecisionEngine decisionEngine;
+    private final InternalServiceClient internalServiceClient;
+    
+    @Value("${services.connectivity.base-url:http://localhost:8081}")
+    private String connectivityServiceUrl;
+    
+    public QoSOptimizationAgent(DecisionEngine decisionEngine, InternalServiceClient internalServiceClient) {
+        super("qos-optimization-agent", "QoS Optimization Agent", 
+                "Autonomously optimizes Quality of Service based on real-time network conditions");
+        this.decisionEngine = decisionEngine;
+        this.internalServiceClient = internalServiceClient;
+        setPriority(8); // High priority
+        setExecutionInterval(30); // Run every 30 seconds
+    }
+    
+    @Override
+    protected AgentResult doExecute(AgentContext context) {
+        log.info("QoS Optimization Agent executing for phone: {}", context.getPhoneNumber());
+        
+        List<AgentAction> executedActions = new ArrayList<>();
+        List<String> recommendations = new ArrayList<>();
+        
+        // Analyze network data and make decision
+        DecisionEngine.DecisionResult decision = decisionEngine.analyzeQoSRequirement(context.getNetworkData());
+        
+        if (decision.isShouldAct()) {
+            log.info("QoS adjustment needed. Confidence: {}, Reason: {}", 
+                    decision.getConfidence(), decision.getReason());
+            
+            // Execute actions
+            for (AgentAction action : decision.getActions()) {
+                try {
+                    // Prepare QoS request for creating a QoS session
+                    Map<String, Object> device = new HashMap<>();
+                    device.put("phoneNumber", context.getPhoneNumber());
+                    
+                    Map<String, Object> qosRequest = new HashMap<>();
+                    qosRequest.put("device", device);
+                    qosRequest.put("qosProfile", "HIGH_BANDWIDTH");
+                    qosRequest.put("duration", 3600);
+                    
+                    // Execute the action using shared module's InternalServiceClient
+                    internalServiceClient.callService(connectivityServiceUrl, "/connectivity/Qos/sessions/create", qosRequest)
+                            .subscribe(
+                                    result -> {
+                                        action.setStatus(AgentAction.ActionStatus.SUCCESS);
+                                        action.setResult(result);
+                                        log.info("QoS adjustment executed successfully");
+                                    },
+                                    error -> {
+                                        action.setStatus(AgentAction.ActionStatus.FAILED);
+                                        action.setError(error.getMessage());
+                                        log.error("QoS adjustment failed", error);
+                                    }
+                            );
+                    
+                    executedActions.add(action);
+                    recommendations.add("QoS adjusted to improve network performance");
+                    
+                } catch (Exception e) {
+                    log.error("Error executing QoS action", e);
+                    action.setStatus(AgentAction.ActionStatus.FAILED);
+                    action.setError(e.getMessage());
+                    executedActions.add(action);
+                }
+            }
+        } else {
+            log.debug("No QoS adjustment needed at this time");
+            recommendations.add("Network conditions are optimal, no QoS adjustment needed");
+        }
+        
+        return AgentResult.builder()
+                .agentId(getId())
+                .success(true)
+                .confidence(decision.getConfidence())
+                .message(decision.getReason().isEmpty() ? "QoS analysis completed" : decision.getReason())
+                .actions(executedActions)
+                .recommendations(recommendations)
+                .build();
+    }
+    
+    @Override
+    public boolean shouldExecute(AgentContext context) {
+        // Only execute if we have network data
+        return super.shouldExecute(context) && 
+               context.getNetworkData() != null &&
+               context.getPhoneNumber() != null;
+    }
+}

@@ -66,9 +66,9 @@ public class GatewayConfig {
     }
 
     @Bean
-    public RouterFunction<ServerResponse> aiAgentRoutes() {
-        return route("ai-agent-service")
-                .route(org.springframework.web.servlet.function.RequestPredicates.path("/ai-agents/**"), http())
+    public RouterFunction<ServerResponse> decisionEngineRoutes() {
+        return route("decision-engine-service")
+                .route(org.springframework.web.servlet.function.RequestPredicates.path("/decision-engine/**"), http())
                 .before(uri("http://localhost:8086"))
                 .build();
     }

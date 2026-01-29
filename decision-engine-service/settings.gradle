@@ -1,0 +1,4 @@
+rootProject.name = 'decision-engine-service'
+
+include 'shared-module'
+project(':shared-module').projectDir = file('../shared-module')

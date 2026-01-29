@@ -29,7 +29,7 @@ public class SecurityConfig {
                 // Allow all gateway routes to be processed by the gateway first
                 .requestMatchers("/actuator/**", "/health", "/fallback/**", 
                                 "/auth/**", "/connectivity/**", "/identification/**", 
-                                "/location/**", "/device/**", "/ai-agents/**",
+                                "/location/**", "/device/**", "/decision-engine/**",
                                 "/nokia-nac/**", "/.well-known/**", "/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )

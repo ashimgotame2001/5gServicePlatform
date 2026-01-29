@@ -79,13 +79,13 @@ public class FallbackController {
                 ));
     }
 
-    @PostMapping("/ai-agents")
-    public ResponseEntity<GatewayResponse<Map<String, Object>>> aiAgentsFallback() {
-        log.warn("AI Agent service fallback triggered");
+    @PostMapping("/decision-engine")
+    public ResponseEntity<GatewayResponse<Map<String, Object>>> decisionEngineFallback() {
+        log.warn("Decision Engine service fallback triggered");
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(GatewayResponse.failure(
                         HttpStatus.SERVICE_UNAVAILABLE.value(),
-                        "AI Agent service is temporarily unavailable"
+                        "Decision Engine service is temporarily unavailable"
                 ));
     }
 }

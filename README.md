@@ -26,7 +26,7 @@ The platform consists of **7 microservices**:
 4. **Identification Service** (Port 8082) - Handles number verification, KYC checks, device status, SIM swap detection
 5. **Location Service** (Port 8083) - Provides location verification, geofencing, population density analysis
 6. **Device Management Service** (Port 8084) - Manages SIM and device swaps
-7. **AI Agent Service** (Port 8086) - **Intelligent autonomous agents**
+7. **Decision Engine Service** (Port 8086) - **Intelligent decision-making agents**
 
 ## Technology Stack
 
@@ -59,7 +59,7 @@ Import the Postman collection to test all API endpoints:
 The collection includes:
 - All authentication endpoints
 - All service endpoints (Connectivity, Identification, Location, Device Management)
-- AI Agent endpoints
+- Decision Engine endpoints
 - Nokia NAC Metadata endpoints
 - Monitoring and actuator endpoints
 
@@ -124,8 +124,8 @@ cd locationService && ./gradlew build
 # Device Management Service
 cd deviceManagementService && ./gradlew build
 
-# AI Agent Service
-cd ai-agent-service && ./gradlew build
+# Decision Engine Service
+cd decision-engine-service && ./gradlew build
 ```
 
 #### Run services (in separate terminals):
@@ -142,8 +142,8 @@ cd identification-service && ./gradlew bootRun
 cd locationService && ./gradlew bootRun
 cd deviceManagementService && ./gradlew bootRun
 
-# 4. Start AI Agent Service
-cd ai-agent-service && ./gradlew bootRun
+# 4. Start Decision Engine Service
+cd decision-engine-service && ./gradlew bootRun
 ```
 
 ### 4. Nokia NAC Configuration
@@ -193,9 +193,9 @@ nokia:
      -H "Authorization: Bearer <your-jwt-token>"
    ```
 
-## AI Agents
+## Decision Engine Agents
 
-The platform includes **9 intelligent AI agents** that autonomously solve real-world problems:
+The platform includes **9 intelligent decision-making agents** that autonomously solve real-world problems:
 
 ### Core Agents
 
@@ -212,15 +212,15 @@ The platform includes **9 intelligent AI agents** that autonomously solve real-w
 8. **Transportation Agent** - Manages connectivity for transportation and event logistics
 9. **Public Safety Agent** - Monitors public safety systems and sustainability
 
-### Execute AI Agents
+### Execute Decision Engine Agents
 
 ```bash
 # Execute all agents for a device
-curl -X POST http://localhost:8080/ai-agents/execute/+1234567890 \
+curl -X POST http://localhost:8080/decision-engine/execute/+1234567890 \
   -H "Authorization: Bearer <token>"
 
 # Execute individual agent
-curl -X POST http://localhost:8080/ai-agents/execute/{agentId}/+1234567890 \
+curl -X POST http://localhost:8080/decision-engine/execute/{agentId}/+1234567890 \
   -H "Authorization: Bearer <token>"
 
 # Available agent IDs:
@@ -235,19 +235,19 @@ curl -X POST http://localhost:8080/ai-agents/execute/{agentId}/+1234567890 \
 # - public-safety-agent
 
 # Get execution history
-curl -X GET http://localhost:8080/ai-agents/history/+1234567890 \
+curl -X GET http://localhost:8080/decision-engine/history/+1234567890 \
   -H "Authorization: Bearer <token>"
 
 # List all agents
-curl -X GET http://localhost:8080/ai-agents/agents \
+curl -X GET http://localhost:8080/decision-engine/agents \
   -H "Authorization: Bearer <token>"
 
 # Get agent details
-curl -X GET http://localhost:8080/ai-agents/agents/qos-optimization-agent \
+curl -X GET http://localhost:8080/decision-engine/agents/qos-optimization-agent \
   -H "Authorization: Bearer <token>"
 
 # Enable/disable agent
-curl -X PUT "http://localhost:8080/ai-agents/agents/qos-optimization-agent/enable?enabled=true" \
+curl -X PUT "http://localhost:8080/decision-engine/agents/qos-optimization-agent/enable?enabled=true" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -310,14 +310,14 @@ All requests should go through the API Gateway:
 - `POST /nokia-nac/authorization/token` - Generic token request endpoint
 - `GET /nokia-nac/authorization/authorize-url` - Get OAuth2 authorization URL
 
-#### AI Agent Service
-- `POST /ai-agents/execute/{phoneNumber}` - Execute all agents for a device
-- `POST /ai-agents/execute/{agentId}/{phoneNumber}` - Execute individual agent
-- `GET /ai-agents/history/{phoneNumber}` - Get execution history
-- `GET /ai-agents/agents` - List all agents
-- `GET /ai-agents/agents/{agentId}` - Get agent details
-- `PUT /ai-agents/agents/{agentId}/enable` - Enable/disable agent
-- `GET /ai-agents/health` - Health check
+#### Decision Engine Service
+- `POST /decision-engine/execute/{phoneNumber}` - Execute all agents for a device
+- `POST /decision-engine/execute/{agentId}/{phoneNumber}` - Execute individual agent
+- `GET /decision-engine/history/{phoneNumber}` - Get execution history
+- `GET /decision-engine/agents` - List all agents
+- `GET /decision-engine/agents/{agentId}` - Get agent details
+- `PUT /decision-engine/agents/{agentId}/enable` - Enable/disable agent
+- `GET /decision-engine/health` - Health check
 
 #### Monitoring
 - `GET /actuator/health` - Health check
@@ -482,7 +482,7 @@ Each service has its own `application.yaml` with:
 - Nokia Network as Code API settings
 - Service-specific configurations
 
-### AI Agent Configuration
+### Decision Engine Configuration
 
 ```yaml
 ai:
@@ -555,7 +555,7 @@ Resilience4j circuit breakers are configured for all services:
 ├── identification-service/  # Number Verification, Device Status
 ├── locationService/         # Location Verification, Geofencing
 ├── deviceManagementService/ # SIM Swap, Device Swap
-├── ai-agent-service/        # Intelligent AI Agents
+├── decision-engine-service/        # Intelligent Decision Engine Agents
 └── shared-module/           # Shared DTOs, utilities, and common services
 ```
 
@@ -636,7 +636,7 @@ public class MyCustomAgent extends BaseAgent {
   - Verify client credentials are not empty (check logs for credential validation)
 
 ### Agent execution issues
-- Check agent is enabled: `GET /ai-agents/agents/{agentId}`
+- Check agent is enabled: `GET /decision-engine/agents/{agentId}`
 - Verify network data collection is working
 - Review agent execution logs
 - Check decision engine confidence threshold

@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "5g-service-platform-collection",
 		"name": "5G Service Platform - All Services",
-		"description": "Complete Postman collection for all services in the 5G Service Platform including Authentication, Connectivity, Identification, Location, Device Management, and AI Agent services.",
+		"description": "Complete Postman collection for all services in the 5G Service Platform including Authentication, Connectivity, Identification, Location, Device Management, and Decision Engine services.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -1054,7 +1054,7 @@
 			"description": "Device status, subscriptions, and device swap management endpoints"
 		},
 		{
-			"name": "AI Agent Service",
+			"name": "Decision Engine Service",
 			"item": [
 				{
 					"name": "Agent Execution",
@@ -1070,7 +1070,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1095,7 +1095,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/emergency-connectivity-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/emergency-connectivity-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1121,7 +1121,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/qos-optimization-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/qos-optimization-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1147,7 +1147,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/location-verification-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/location-verification-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1173,7 +1173,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/device-management-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/device-management-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1199,7 +1199,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/healthcare-monitoring-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/healthcare-monitoring-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1225,7 +1225,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/public-safety-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/public-safety-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1251,7 +1251,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/smart-city-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/smart-city-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1277,7 +1277,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/transportation-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/transportation-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1303,7 +1303,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/execute/network-monitoring-agent/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/execute/network-monitoring-agent/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1329,7 +1329,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/history/{{phoneNumber}}",
+									"raw": "{{baseUrl}}/decision-engine/history/{{phoneNumber}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1360,7 +1360,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/agents",
+									"raw": "{{baseUrl}}/decision-engine/agents",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1384,7 +1384,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/agents/{{agentId}}",
+									"raw": "{{baseUrl}}/decision-engine/agents/{{agentId}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1409,7 +1409,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/ai-agents/agents/{{agentId}}/enable?enabled={{enabled}}",
+									"raw": "{{baseUrl}}/decision-engine/agents/{{agentId}}/enable?enabled={{enabled}}",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1445,7 +1445,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/ai-agents/health",
+							"raw": "{{baseUrl}}/decision-engine/health",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1459,7 +1459,7 @@
 					"response": []
 				}
 			],
-			"description": "AI Agent orchestration and management endpoints. Includes Emergency Connectivity Agent compatible with Emergency Connectivity Setup (BR-1 through BR-7)"
+			"description": "Decision Engine orchestration and management endpoints. Includes Emergency Connectivity Agent compatible with Emergency Connectivity Setup (BR-1 through BR-7)"
 		},
 		{
 			"name": "Nokia NAC",

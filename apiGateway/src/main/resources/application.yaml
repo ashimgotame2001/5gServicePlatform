@@ -83,15 +83,15 @@ spring:
                 fallbackUri: forward:/fallback/device
             - StripPrefix=0
         
-        - id: ai-agent-service
+        - id: decision-engine-service
           uri: http://localhost:8086
           predicates:
-            - Path=/ai-agents/**
+            - Path=/decision-engine/**
           filters:
             - name: CircuitBreaker
               args:
-                name: aiAgentCircuitBreaker
-                fallbackUri: forward:/fallback/ai-agents
+                name: decisionEngineCircuitBreaker
+                fallbackUri: forward:/fallback/decision-engine
             - StripPrefix=0
         
         - id: nokia-nac-metadata
@@ -189,7 +189,7 @@ resilience4j:
         minimumNumberOfCalls: 5
         waitDurationInOpenState: 5s
         failureRateThreshold: 50
-      aiAgentCircuitBreaker:
+      decisionEngineCircuitBreaker:
         registerHealthIndicator: true
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
