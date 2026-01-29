@@ -2,19 +2,19 @@
 
 A comprehensive Java backend platform leveraging Nokia's Network as Code platform and advanced 5G APIs to build real-world applications and services. Features **intelligent AI agents** that autonomously monitor, analyze, and optimize 5G network performance in real-time.
 
-## 🚀 Overview
+## Overview
 
 The Smart 5G Service Platform is a microservices-based solution that uses Nokia's Network as Code APIs to create autonomous AI agents capable of solving real-world problems across smart cities, emergency services, healthcare, transportation, and public safety.
 
 ### Key Features
 
-- **🤖 Intelligent AI Agents**: 9 autonomous agents that use real network data to solve problems
-- **📡 Complete API Integration**: All Nokia Network as Code APIs integrated with OAuth2 authorization
-- **🔐 Dynamic OAuth2**: Automatic client credentials retrieval and token management
-- **🏙️ Real-World Use Cases**: Smart cities, emergency connectivity, healthcare, transportation, public safety
-- **🔒 Enterprise Security**: OAuth2 Authorization Server with JWT tokens
-- **📊 Real-Time Monitoring**: Continuous network data collection and analysis
-- **⚡ Autonomous Decision Making**: Rule-based decision engine with ML-ready architecture
+- **Intelligent AI Agents**: 9 autonomous agents that use real network data to solve problems
+- **Complete API Integration**: All Nokia Network as Code APIs integrated with OAuth2 authorization
+- **Dynamic OAuth2**: Automatic client credentials retrieval and token management
+- **Real-World Use Cases**: Smart cities, emergency connectivity, healthcare, transportation, public safety
+- **Enterprise Security**: OAuth2 Authorization Server with JWT tokens
+- **Real-Time Monitoring**: Continuous network data collection and analysis
+- **Autonomous Decision Making**: Rule-based decision engine with ML-ready architecture
 
 ## Architecture Overview
 
@@ -26,7 +26,7 @@ The platform consists of **7 microservices**:
 4. **Identification Service** (Port 8082) - Handles number verification, KYC checks, device status, SIM swap detection
 5. **Location Service** (Port 8083) - Provides location verification, geofencing, population density analysis
 6. **Device Management Service** (Port 8084) - Manages SIM and device swaps
-7. **AI Agent Service** (Port 8086) - **Intelligent autonomous agents** ⭐
+7. **AI Agent Service** (Port 8086) - **Intelligent autonomous agents**
 
 ## Technology Stack
 
@@ -193,7 +193,7 @@ nokia:
      -H "Authorization: Bearer <your-jwt-token>"
    ```
 
-## 🤖 AI Agents
+## AI Agents
 
 The platform includes **9 intelligent AI agents** that autonomously solve real-world problems:
 
@@ -555,7 +555,7 @@ Resilience4j circuit breakers are configured for all services:
 ├── identification-service/  # Number Verification, Device Status
 ├── locationService/         # Location Verification, Geofencing
 ├── deviceManagementService/ # SIM Swap, Device Swap
-├── ai-agent-service/        # Intelligent AI Agents ⭐
+├── ai-agent-service/        # Intelligent AI Agents
 └── shared-module/           # Shared DTOs, utilities, and common services
 ```
 
@@ -691,4 +691,4 @@ For issues and questions:
 
 ---
 
-**Built with ❤️ using Nokia Network as Code APIs**
+**Built with Nokia Network as Code APIs**
