@@ -1075,7 +1075,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"{{phoneNumber}}"
 									]
@@ -1100,7 +1100,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"emergency-connectivity-agent",
 										"{{phoneNumber}}"
@@ -1126,7 +1126,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"qos-optimization-agent",
 										"{{phoneNumber}}"
@@ -1152,7 +1152,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"location-verification-agent",
 										"{{phoneNumber}}"
@@ -1178,7 +1178,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"device-management-agent",
 										"{{phoneNumber}}"
@@ -1204,7 +1204,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"healthcare-monitoring-agent",
 										"{{phoneNumber}}"
@@ -1230,7 +1230,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"public-safety-agent",
 										"{{phoneNumber}}"
@@ -1256,7 +1256,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"smart-city-agent",
 										"{{phoneNumber}}"
@@ -1282,7 +1282,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"transportation-agent",
 										"{{phoneNumber}}"
@@ -1308,7 +1308,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"execute",
 										"network-monitoring-agent",
 										"{{phoneNumber}}"
@@ -1334,7 +1334,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"history",
 										"{{phoneNumber}}"
 									]
@@ -1365,7 +1365,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"agents"
 									]
 								},
@@ -1389,7 +1389,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"agents",
 										"{{agentId}}"
 									]
@@ -1414,7 +1414,7 @@
 										"{{baseUrl}}"
 									],
 									"path": [
-										"ai-agents",
+										"decision-engine",
 										"agents",
 										"{{agentId}}",
 										"enable"
@@ -1450,7 +1450,7 @@
 								"{{baseUrl}}"
 							],
 							"path": [
-								"ai-agents",
+								"decision-engine",
 								"health"
 							]
 						},
