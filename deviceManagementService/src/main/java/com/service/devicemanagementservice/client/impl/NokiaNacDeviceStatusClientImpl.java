@@ -7,11 +7,13 @@ import com.service.shared.exception.GlobalException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.codec.DecodingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
@@ -28,6 +30,7 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
     private static final String ROAMING_STATUS_PATH = DEVICE_STATUS_PATH + "roaming";
     private static final String SUBSCRIPTIONS_PATH = DEVICE_STATUS_PATH + "subscriptions";
     private static final String host ="device-status.nokia.rapidapi.com";
+    private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
 
 
     private final WebClient webClient;
@@ -41,11 +44,11 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
     public NokiaNacDeviceStatusClientImpl(
             @Qualifier("nokiaWebClient") WebClient webClient,
             @Value("${nokia.nac.timeout:30000}") int timeoutMs,
-            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts, com.service.shared.util.ClientUtil clientUtil
+            @Value("${nokia.nac.retry-attempts:3}") int retryAttempts
     ) {
         this.webClient = webClient;
         this.timeout = Duration.ofMillis(timeoutMs);
-        this.retrySpec = clientUtil.createRetrySpec(retryAttempts);
+        this.retrySpec = createRetrySpec(retryAttempts);
     }
 
 
@@ -279,5 +282,40 @@ public class NokiaNacDeviceStatusClientImpl implements NokiaNacDeviceStatusClien
                     );
                     return Mono.<Throwable>error(exception);
                 });
+    }
+
+    private Retry createRetrySpec(int retryAttempts) {
+        return Retry.fixedDelay(retryAttempts, RETRY_DELAY)
+                .filter(this::isRetryableError)
+                .doBeforeRetry(retrySignal ->
+                        log.warn("Retrying Nokia NAC API call. Attempt: {}/{}",
+                                retrySignal.totalRetries() + 1, retryAttempts))
+                .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+                    Throwable failure = retrySignal.failure();
+                    log.error("Nokia NAC API retry exhausted after {} attempts", retryAttempts, failure);
+                    return new com.service.shared.exception.GlobalException(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            String.format("Nokia NAC API retry exhausted after %d attempts: %s",
+                                    retryAttempts, failure.getMessage()),
+                            failure);
+                });
+    }
+
+    private boolean isRetryableError(Throwable throwable) {
+        if (throwable instanceof IllegalArgumentException ||
+                throwable instanceof DecodingException) {
+            return false;
+        }
+
+        if (throwable instanceof WebClientResponseException webClientException) {
+            HttpStatusCode statusCode = webClientException.getStatusCode();
+            if (statusCode != null) {
+                return statusCode.is5xxServerError() ||
+                        statusCode.value() == HttpStatus.REQUEST_TIMEOUT.value() ||
+                        statusCode.value() == HttpStatus.SERVICE_UNAVAILABLE.value();
+            }
+        }
+
+        return !(throwable instanceof DecodingException);
     }
 }

@@ -93,6 +93,17 @@ spring:
                 name: aiAgentCircuitBreaker
                 fallbackUri: forward:/fallback/ai-agents
             - StripPrefix=0
+        
+        - id: nokia-nac-metadata
+          uri: http://localhost:8081
+          predicates:
+            - Path=/nokia-nac/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: connectivityCircuitBreaker
+                fallbackUri: forward:/fallback/connectivity
+            - StripPrefix=0
       
       # Note: RequestRateLimiter requires Redis. Commented out if Redis is not available.
       # default-filters:

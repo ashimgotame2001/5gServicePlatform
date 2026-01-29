@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**", "/health", "/fallback/**", 
                                 "/auth/**", "/connectivity/**", "/identification/**", 
                                 "/location/**", "/device/**", "/ai-agents/**",
-                                "/.well-known/**", "/oauth2/**").permitAll()
+                                "/nokia-nac/**", "/.well-known/**", "/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

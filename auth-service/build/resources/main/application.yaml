@@ -75,3 +75,11 @@ logging:
     org.springframework.security: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+nokia:
+  nac:
+    base-url: https://network-as-code.p-eu.rapidapi.com
+    rapidapi-key: c5cd88f861msh99ff63cc93e6945p13e42ajsn6dee49b8bb70
+    rapidapi-host: network-as-code.nokia.rapidapi.com
+    timeout: 30000
+    retry-attempts: 3

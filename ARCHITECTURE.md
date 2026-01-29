@@ -37,6 +37,8 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 │  │  • Rate Limiting                                         │   │
 │  │  • Circuit Breakers                                      │   │
 │  │  • Request/Response Transformation                       │   │
+│  │  • Routes: /auth, /connectivity, /identification,       │   │
+│  │            /location, /device, /ai-agents, /nokia-nac  │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────────┘
                              │
@@ -47,6 +49,8 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 │   Auth       │    │ Connectivity │    │Identification│
 │  Service     │    │   Service    │    │   Service    │
 │   (8085)     │    │   (8081)     │    │   (8082)     │
+│              │    │ + Nokia NAC  │    │              │
+│              │    │   Metadata   │    │              │
 └──────────────┘    └──────────────┘    └──────────────┘
         │                    │                    │
         ▼                    ▼                    ▼
@@ -57,6 +61,15 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 └──────────────┘    └──────────────┘    └──────────────┘
         │                    │                    │
         └────────────────────┼────────────────────┘
+                             │
+                             ▼
+        ┌────────────────────────────────────┐
+        │      Shared Module                │
+        │  • Common DTOs                    │
+        │  • Client Interfaces              │
+        │  • Event Producers                │
+        │  • Utilities & Configurations     │
+        └────────────────────────────────────┘
                              │
                              ▼
         ┌────────────────────────────────────┐
@@ -82,6 +95,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
   - **Location Domain**: Location Service
   - **Device Domain**: Device Management Service
   - **Intelligence Domain**: AI Agent Service
+  - **Shared Domain**: Shared Module (common components)
 
 ### 3. Event-Driven Architecture
 - **Kafka Messaging**: Asynchronous communication between services
@@ -123,6 +137,16 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Request rate limiting
 - JWT token validation
 
+**Routes Configured**:
+- `/auth/**` → Auth Service (8085)
+- `/.well-known/**` → Auth Service (8085)
+- `/connectivity/**` → Connectivity Service (8081)
+- `/identification/**` → Identification Service (8082)
+- `/location/**` → Location Service (8083)
+- `/device/**` → Device Management Service (8084)
+- `/ai-agents/**` → AI Agent Service (8086)
+- `/nokia-nac/**` → Connectivity Service (8081) - Nokia NAC Metadata
+
 #### 2. Auth Service (Port 8085)
 **Purpose**: OAuth2 Authorization Server and user management
 
@@ -149,6 +173,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Network slice management
 - Connectivity status monitoring
 - QoS profile management
+- Nokia NAC Metadata endpoints (OpenID, OAuth, Security)
 
 **Technology**: Spring Boot, WebClient
 
@@ -157,6 +182,15 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - QoS request processing
 - Network slice allocation
 - Real-time connectivity monitoring
+- Nokia NAC Metadata API (via shared module)
+
+**API Endpoints**:
+- `POST /connectivity/Qos/sessions` - Retrieve QoS sessions by phone number
+- `POST /connectivity/Qos/sessions/create` - Create QoS session
+- `GET /connectivity/Qos/sessions/{id}` - Get QoS session by ID
+- `GET /nokia-nac/metadata/openid-configuration` - Get OpenID configuration
+- `GET /nokia-nac/metadata/security.txt` - Get security.txt
+- `GET /nokia-nac/metadata/oauth-authorization-server` - Get OAuth metadata
 
 #### 4. Identification Service (Port 8082)
 **Purpose**: Identity verification and device management
@@ -166,6 +200,7 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Know Your Customer (KYC) checks
 - Device status monitoring
 - SIM swap detection
+- Phone number sharing/retrieval
 
 **Technology**: Spring Boot, WebClient
 
@@ -174,12 +209,18 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Device status tracking
 - SIM swap detection and alerts
 - KYC compliance checks
+- Phone number verification and sharing
+
+**API Endpoints**:
+- `POST /identification/verify-number` - Verify phone number
+- `GET /identification/share-phone-number` - Get device phone number
 
 #### 5. Location Service (Port 8083)
 **Purpose**: Location-based services
 
 **Responsibilities**:
-- Location verification
+- Location verification (v1, v2, v3 APIs)
+- Location retrieval
 - Geofencing management
 - Population density analysis
 - Location tracking
@@ -191,6 +232,14 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Geofence creation and monitoring
 - Location accuracy validation
 - Population density calculations
+- Multi-version API support (v1, v2, v3)
+
+**API Endpoints**:
+- `POST /location/verify` - Verify device location (with version parameter)
+- `POST /location/verify/v1` - Verify location using v1 API
+- `POST /location/verify/v2` - Verify location using v2 API
+- `POST /location/verify/v3` - Verify location using v3 API
+- `POST /location/retrieve` - Retrieve device location
 
 #### 6. Device Management Service (Port 8084)
 **Purpose**: Device and SIM card management
@@ -200,6 +249,8 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Device swap operations
 - Device lifecycle management
 - SIM card tracking
+- Device status monitoring
+- Device status subscriptions
 
 **Technology**: Spring Boot, WebClient
 
@@ -208,6 +259,18 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Device swap management
 - Device inventory tracking
 - Swap history and audit
+- Device connectivity status
+- Device roaming status
+- Device status subscription management
+
+**API Endpoints**:
+- `POST /device/status/connectivity` - Get device connectivity status
+- `POST /device/status/roaming` - Get device roaming status
+- `GET /device/subscriptions` - Get all device status subscriptions
+- `POST /device/subscriptions` - Create device status subscription
+- `GET /device/subscriptions/{subscriptionId}` - Get subscription by ID
+- `POST /device/swap/retrieve-date` - Retrieve device swap date
+- `POST /device/swap/check` - Check device swap
 
 #### 7. AI Agent Service (Port 8086) ⭐
 **Purpose**: Intelligent autonomous agents for network optimization
@@ -227,6 +290,26 @@ The Smart 5G Service Platform is a **microservices-based architecture** that lev
 - Real-time network data collection
 - Agent orchestration and coordination
 - Execution history tracking
+
+#### 8. Shared Module
+**Purpose**: Common components and utilities shared across all services
+
+**Responsibilities**:
+- Common DTOs (Data Transfer Objects)
+- Client interfaces and implementations
+- Event producers (Kafka)
+- Common utilities and configurations
+- Service interfaces for emergency connectivity
+
+**Key Components**:
+- **DTOs**: DeviceDTO, LocationVerificationDto, AreaDTO, EmergencyEventDTO, etc.
+- **Clients**: NokiaNacMetadataClient, common client utilities
+- **Services**: EmergencyContextService, TrustValidationService, NetworkStateAssessmentService, etc.
+- **Events**: EmergencyEventProducer for Kafka event publishing
+- **Configuration**: Kafka, Security, WebClient configurations
+- **Utilities**: ClientUtil, ResponseHelper
+
+**Usage**: All services depend on the shared module for common functionality
 
 ## Component Architecture
 
@@ -312,7 +395,8 @@ Service Routing
     ├──► Identification Service
     ├──► Location Service
     ├──► Device Management Service
-    └──► AI Agent Service
+    ├──► AI Agent Service
+    └──► Nokia NAC Metadata (via Connectivity Service)
     │
     ▼
 Service Processing
@@ -669,16 +753,29 @@ Agent Interface
 ### External Integrations
 
 1. **Nokia Network as Code APIs**
-   - Location Retrieval API
-   - Number Verification API
-   - QoS Management API
-   - Device Status API
-   - SIM Swap API
+   - **QoS Management API**: Create, retrieve, and manage QoS sessions
+   - **Location APIs**: 
+     - Location Verification (v1, v2, v3)
+     - Location Retrieval
+   - **Identification APIs**:
+     - Phone Number Verification
+     - Phone Number Sharing
+   - **Device Management APIs**:
+     - Device Connectivity Status
+     - Device Roaming Status
+     - Device Status Subscriptions
+     - Device Swap Detection
+     - SIM Swap Detection
+   - **Metadata APIs**:
+     - OpenID Configuration
+     - OAuth Authorization Server Metadata
+     - Security.txt
 
 2. **RapidAPI**
    - API key management
    - Rate limiting
    - API versioning
+   - Header injection (X-RapidAPI-Key, X-RapidAPI-Host)
 
 ### Internal Integrations
 
@@ -694,6 +791,51 @@ Agent Interface
 - **Event-Driven**: Kafka for async communication
 - **RESTful APIs**: Standard REST for synchronous communication
 
+## Emergency Connectivity Architecture
+
+The platform includes comprehensive support for **Guaranteed 5G Connectivity for Emergency Services**. This feature implements an event-driven, autonomous system for emergency response.
+
+### Emergency Connectivity Flow
+
+1. **Emergency Context Detection**: Automatic detection from geofence, SOS button, or external systems
+2. **Event Broadcasting**: Kafka-based event publishing for parallel processing
+3. **Trust & Authorization**: Device identity and SIM integrity validation
+4. **Network State Assessment**: Real-time network condition evaluation
+5. **AI Decision Engine**: Autonomous decision-making with explainability
+6. **Network Orchestration**: Guaranteed connectivity execution via Network as Code
+7. **Continuous Monitoring**: Real-time metrics and automatic remediation
+8. **Audit & Compliance**: Complete audit trail for regulatory compliance
+
+### Emergency Connectivity Components
+
+- **EmergencyEventDTO**: Event structure for emergency broadcasts
+- **EmergencyContextDTO**: Context information for emergency situations
+- **TrustValidationDTO**: Trust and authorization validation results
+- **NetworkStateDTO**: Real-time network state assessment
+- **DecisionResultDTO**: AI decision engine results
+- **NetworkOrchestrationDTO**: Network orchestration execution status
+- **MonitoringMetricsDTO**: Real-time monitoring metrics
+- **AuditLogDTO**: Complete audit trail
+
+### Service Interfaces (Shared Module)
+
+- `EmergencyContextService`: Emergency context management
+- `TrustValidationService`: Trust and authorization validation
+- `NetworkStateAssessmentService`: Network state evaluation
+- `EmergencyDecisionEngineService`: AI decision making
+- `NetworkOrchestrationService`: Network orchestration execution
+- `EmergencyMonitoringService`: Continuous monitoring
+- `AuditService`: Audit logging
+
+### Kafka Integration
+
+- **Topic**: `emergency-events`
+- **Producer**: `EmergencyEventProducer` (shared module)
+- **Event-Driven**: Parallel processing of emergency events
+- **Guaranteed Delivery**: Idempotent producer configuration
+
+See [EMERGENCY_CONNECTIVITY_SETUP.md](EMERGENCY_CONNECTIVITY_SETUP.md) for complete setup instructions.
+
 ## Future Architecture Enhancements
 
 1. **Service Mesh**: Istio/Linkerd integration
@@ -704,8 +846,10 @@ Agent Interface
 6. **API Versioning**: Version management strategy
 7. **CQRS**: Command Query Responsibility Segregation
 8. **Event Sourcing**: Complete event sourcing implementation
+9. **Service Mesh**: Enhanced service-to-service communication
+10. **Distributed Tracing**: OpenTelemetry integration
 
 ---
 
 **Last Updated**: 2026-01-26  
-**Version**: 1.0.0
+**Version**: 2.0.0

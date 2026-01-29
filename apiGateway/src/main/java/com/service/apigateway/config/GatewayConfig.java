@@ -72,4 +72,12 @@ public class GatewayConfig {
                 .before(uri("http://localhost:8086"))
                 .build();
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> nokiaNacMetadataRoutes() {
+        return route("nokia-nac-metadata")
+                .route(org.springframework.web.servlet.function.RequestPredicates.path("/nokia-nac/**"), http())
+                .before(uri("http://localhost:8081"))
+                .build();
+    }
 }
