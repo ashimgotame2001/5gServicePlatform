@@ -9,7 +9,8 @@ The Smart 5G Service Platform is a microservices-based solution that uses Nokia'
 ### Key Features
 
 - **🤖 Intelligent AI Agents**: 9 autonomous agents that use real network data to solve problems
-- **📡 Complete API Integration**: All Nokia Network as Code APIs integrated
+- **📡 Complete API Integration**: All Nokia Network as Code APIs integrated with OAuth2 authorization
+- **🔐 Dynamic OAuth2**: Automatic client credentials retrieval and token management
 - **🏙️ Real-World Use Cases**: Smart cities, emergency connectivity, healthcare, transportation, public safety
 - **🔒 Enterprise Security**: OAuth2 Authorization Server with JWT tokens
 - **📊 Real-Time Monitoring**: Continuous network data collection and analysis
@@ -145,7 +146,25 @@ cd deviceManagementService && ./gradlew bootRun
 cd ai-agent-service && ./gradlew bootRun
 ```
 
-### 4. Authentication Setup
+### 4. Nokia NAC Configuration
+
+The platform automatically retrieves OAuth2 client credentials from Nokia NAC authorization server. You only need to configure the RapidAPI key:
+
+```yaml
+# In each service's application.yaml
+nokia:
+  nac:
+    rapidapi-key: your-rapidapi-key-here
+    rapidapi-host: network-as-code.nokia.rapidapi.com
+    authorization-server-url: https://authorization.p-eu.rapidapi.com
+    scope: read write
+    timeout: 30000
+    retry-attempts: 3
+```
+
+**Note**: Client credentials (`client_id` and `client_secret`) are automatically retrieved from Nokia NAC authorization server - no manual configuration needed!
+
+### 5. Authentication Setup
 
 1. **Register a user:**
    ```bash
@@ -200,6 +219,21 @@ The platform includes **9 intelligent AI agents** that autonomously solve real-w
 curl -X POST http://localhost:8080/ai-agents/execute/+1234567890 \
   -H "Authorization: Bearer <token>"
 
+# Execute individual agent
+curl -X POST http://localhost:8080/ai-agents/execute/{agentId}/+1234567890 \
+  -H "Authorization: Bearer <token>"
+
+# Available agent IDs:
+# - qos-optimization-agent
+# - network-monitoring-agent
+# - location-verification-agent
+# - device-management-agent
+# - smart-city-agent
+# - emergency-connectivity-agent
+# - healthcare-monitoring-agent
+# - transportation-agent
+# - public-safety-agent
+
 # Get execution history
 curl -X GET http://localhost:8080/ai-agents/history/+1234567890 \
   -H "Authorization: Bearer <token>"
@@ -231,6 +265,10 @@ All requests should go through the API Gateway:
 - `POST /connectivity/Qos/sessions` - Retrieve QoS sessions by phone number
 - `POST /connectivity/Qos/sessions/create` - Create QoS session
 - `GET /connectivity/Qos/sessions/{id}` - Get QoS session by ID
+- `POST /connectivity/network-slice/subscriptions` - Create network slice subscription
+- `GET /connectivity/network-slice/subscriptions` - Get all network slice subscriptions
+- `GET /connectivity/network-slice/subscriptions/{subscriptionId}` - Get network slice subscription by ID
+- `DELETE /connectivity/network-slice/subscriptions/{subscriptionId}` - Delete network slice subscription
 - `GET /connectivity/health` - Health check
 
 #### Identification Service
@@ -244,6 +282,10 @@ All requests should go through the API Gateway:
 - `POST /location/verify/v2` - Verify device location (v2 API)
 - `POST /location/verify/v3` - Verify device location (v3 API)
 - `POST /location/retrieve` - Retrieve device location
+- `POST /location/geofencing/subscriptions` - Create geofencing subscription
+- `GET /location/geofencing/subscriptions` - Get all geofencing subscriptions
+- `GET /location/geofencing/subscriptions/{subscriptionId}` - Get geofencing subscription by ID
+- `DELETE /location/geofencing/subscriptions/{subscriptionId}` - Delete geofencing subscription
 - `GET /location/health` - Health check
 
 #### Device Management Service
@@ -261,8 +303,16 @@ All requests should go through the API Gateway:
 - `GET /nokia-nac/metadata/security.txt` - Get security.txt
 - `GET /nokia-nac/metadata/oauth-authorization-server` - Get OAuth authorization server metadata
 
+#### Nokia NAC Authorization (Shared Module)
+- `POST /nokia-nac/authorization/token/client-credentials` - Get OAuth2 token using client credentials grant
+- `POST /nokia-nac/authorization/token/authorization-code` - Get OAuth2 token using authorization code grant
+- `POST /nokia-nac/authorization/token/refresh` - Refresh OAuth2 access token
+- `POST /nokia-nac/authorization/token` - Generic token request endpoint
+- `GET /nokia-nac/authorization/authorize-url` - Get OAuth2 authorization URL
+
 #### AI Agent Service
 - `POST /ai-agents/execute/{phoneNumber}` - Execute all agents for a device
+- `POST /ai-agents/execute/{agentId}/{phoneNumber}` - Execute individual agent
 - `GET /ai-agents/history/{phoneNumber}` - Get execution history
 - `GET /ai-agents/agents` - List all agents
 - `GET /ai-agents/agents/{agentId}` - Get agent details
@@ -273,6 +323,38 @@ All requests should go through the API Gateway:
 - `GET /actuator/health` - Health check
 - `GET /actuator/metrics` - Metrics endpoint
 - `GET /actuator/prometheus` - Prometheus metrics
+
+## OAuth2 Authorization Implementation
+
+The platform implements comprehensive OAuth2 authorization for all Nokia NAC API calls:
+
+### Dynamic Client Credentials
+- **Automatic Retrieval**: Client credentials (`client_id` and `client_secret`) are automatically fetched from Nokia NAC authorization server
+- **No Manual Configuration**: No need to set environment variables or YAML configuration for credentials
+- **Caching**: Credentials are cached after first retrieval to minimize API calls
+- **Thread-Safe**: Uses ReentrantLock for concurrent access
+
+### Token Management
+- **Automatic Acquisition**: OAuth2 access tokens are automatically acquired when needed
+- **Smart Caching**: Tokens are cached with automatic refresh 5 minutes before expiration
+- **Bearer Token Authorization**: All Nokia NAC API calls automatically include `Authorization: Bearer {token}` header
+- **Multiple Grant Types**: Supports client credentials, authorization code, and refresh token grants
+
+### Implementation Details
+- **Token Manager**: `NokiaNacTokenManager` handles token lifecycle management
+- **Client Credentials Client**: `NokiaNacClientCredentialsClient` retrieves credentials from API
+- **Authorization Client**: `NokiaNacAuthorizationClient` handles OAuth2 token requests
+- **All NAC Clients Updated**: 9 Nokia NAC API clients now include OAuth2 Bearer token authorization
+
+### Configuration
+Only the RapidAPI key needs to be configured - everything else is automatic:
+```yaml
+nokia:
+  nac:
+    rapidapi-key: your-rapidapi-key-here
+    authorization-server-url: https://authorization.p-eu.rapidapi.com
+    scope: read write
+```
 
 ## Network APIs Integration
 
@@ -312,23 +394,37 @@ All requests should go through the API Gateway:
 - **Security.txt**: Get security information
 - **OAuth Authorization Server**: Get OAuth authorization server metadata
 
+### ✅ OAuth2 Authorization
+- **Dynamic Client Credentials**: Automatically retrieves client_id and client_secret from Nokia NAC
+- **Token Management**: Automatic token acquisition, caching, and refresh
+- **OAuth2 Grants**: Support for client credentials, authorization code, and refresh token grants
+- **Bearer Token Authorization**: All Nokia NAC API calls include OAuth2 Bearer tokens
+
 ### ✅ Network Insights
 - **Congestion Data**: Network congestion monitoring
 - **Device Reachability**: Connectivity and reachability tracking
 
 ## Emergency Connectivity Setup
 
-The platform includes comprehensive support for **Guaranteed 5G Connectivity for Emergency Services**. See [EMERGENCY_CONNECTIVITY_SETUP.md](EMERGENCY_CONNECTIVITY_SETUP.md) for complete setup instructions.
+The platform includes comprehensive support for **Guaranteed 5G Connectivity for Emergency Services** with fully implemented services in the shared module.
 
 ### Key Features:
 - **Emergency Context Detection**: Automatic detection from geofence, SOS button, or external systems
+  - `EmergencyContextService`: Detects, manages, and resolves emergency contexts
 - **Event-Driven Architecture**: Kafka-based event broadcasting for parallel processing
+  - `EmergencyEventProducer`: Publishes emergency events to Kafka
 - **Trust & Authorization**: Device identity and SIM integrity validation
+  - `TrustValidationService`: Validates device trust, SIM integrity, and calculates trust scores
 - **Network State Assessment**: Real-time network condition evaluation
+  - `NetworkStateAssessmentService`: Assesses congestion, slice availability, and QoS capacity
 - **AI Decision Engine**: Autonomous decision-making with explainability
+  - `EmergencyDecisionEngineService`: Evaluates emergencies, applies policies, and generates decisions
 - **Network Orchestration**: Guaranteed connectivity execution via Network as Code
+  - `NetworkOrchestrationService`: Executes guaranteed connectivity, QoS requests, and slice assignment
 - **Continuous Monitoring**: Real-time metrics and automatic remediation
+  - `EmergencyMonitoringService`: Monitors metrics, detects degradation, and triggers remediation
 - **Audit & Compliance**: Complete audit trail for regulatory compliance
+  - `AuditService`: Logs all decisions and actions for compliance
 
 ## Use Cases
 
@@ -410,16 +506,27 @@ nokia:
     base-url: https://network-as-code.p-eu.rapidapi.com
     rapidapi-key: your-rapidapi-key-here
     rapidapi-host: network-as-code.nokia.rapidapi.com
+    authorization-server-url: https://authorization.p-eu.rapidapi.com
+    scope: read write
     timeout: 30000
     retry-attempts: 3
 ```
 
+**Important Notes**:
+- **Client Credentials**: Automatically retrieved from Nokia NAC authorization server - no manual configuration needed
+- **OAuth2 Tokens**: Automatically acquired, cached, and refreshed by `NokiaNacTokenManager`
+- **Bearer Token Authorization**: All Nokia NAC API calls automatically include OAuth2 Bearer tokens
+- **Token Caching**: Tokens are cached with automatic refresh 5 minutes before expiration
+
 ## Security
 
-- **OAuth2 Authorization Server**: Auth Service acts as OAuth2 provider
-- **JWT Tokens**: All services validate JWT tokens
+- **OAuth2 Authorization Server**: Auth Service acts as OAuth2 provider for internal services
+- **Nokia NAC OAuth2**: Dynamic client credentials retrieval and automatic token management
+- **JWT Tokens**: All services validate JWT tokens for internal API access
 - **API Gateway Security**: Centralized authentication and authorization
 - **Circuit Breakers**: Resilience4j circuit breakers protect against failures
+- **Bearer Token Authorization**: All Nokia NAC API calls secured with OAuth2 Bearer tokens
+- **Thread-Safe Token Management**: Token and credential caching with ReentrantLock for concurrent access
 
 ## Monitoring
 
@@ -456,12 +563,19 @@ Resilience4j circuit breakers are configured for all services:
 
 The `shared-module` contains common components used across all microservices:
 
-- **DTOs**: Common data transfer objects (DeviceDTO, LocationVerificationDto, etc.)
+- **DTOs**: Common data transfer objects (DeviceDTO, LocationVerificationDto, NokiaNacTokenRequestDTO, etc.)
 - **Client Interfaces**: Nokia NAC client interfaces and implementations
-- **Services**: Shared service interfaces (EmergencyContextService, TrustValidationService, etc.)
+  - `NokiaNacAuthorizationClient`: OAuth2 token management
+  - `NokiaNacClientCredentialsClient`: Dynamic client credentials retrieval
+  - `NokiaNacMetadataClient`: Metadata endpoint access
+- **Services**: Shared service interfaces and implementations
+  - **OAuth2 Services**: `NokiaNacTokenManager`, `NokiaNacAuthorizationService`
+  - **Emergency Services**: `EmergencyContextService`, `TrustValidationService`, `NetworkStateAssessmentService`, `EmergencyDecisionEngineService`, `NetworkOrchestrationService`, `EmergencyMonitoringService`
+  - **Internal Communication**: `InternalServiceClient` for service-to-service calls
 - **Event Producers**: Kafka event producers (EmergencyEventProducer)
-- **Configuration**: Common configurations (Kafka, Security, etc.)
+- **Configuration**: Common configurations (Kafka, Security, WebClient, etc.)
 - **Utilities**: Common utility classes and annotations
+- **Controllers**: Shared REST controllers (NokiaNacMetadataController, NokiaNacAuthorizationController)
 
 ### Adding New Agents
 
@@ -507,10 +621,19 @@ public class MyCustomAgent extends BaseAgent {
 - Review gateway logs at `/actuator/gateway/routes`
 
 ### Nokia API calls failing
-- Verify API key is correct in `application.yaml`
-- Check network connectivity
+- Verify RapidAPI key is correct in `application.yaml`
+- Check network connectivity to Nokia NAC endpoints
 - Review retry configuration
 - Check Nokia API documentation for endpoint changes
+- **OAuth2 Token Issues**: 
+  - Check logs for "Failed to retrieve client credentials" or "Failed to obtain access token"
+  - Verify `authorization-server-url` is correct
+  - Ensure RapidAPI key has access to authorization endpoints
+  - Check if client credentials are being retrieved successfully (look for "Successfully retrieved client credentials" in logs)
+- **403 Forbidden Errors**: 
+  - Verify OAuth2 Bearer token is included in requests
+  - Check token expiration (tokens auto-refresh 5 minutes before expiration)
+  - Verify client credentials are not empty (check logs for credential validation)
 
 ### Agent execution issues
 - Check agent is enabled: `GET /ai-agents/agents/{agentId}`
