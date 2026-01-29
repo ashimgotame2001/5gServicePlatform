@@ -7,19 +7,21 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.42/8365263844ebb62398e0dc33057ba10ba472d3b8/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="auth-service.main" />
-        <module name="auth-service.shared-module.main" />
+        <module name="identification-service.main" />
+        <module name="identification-service.shared-module.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ai-agent-service" target="21" />
+      <module name="ai-agent-service.main" target="21" />
+      <module name="ai-agent-service.shared-module" target="21" />
+      <module name="ai-agent-service.shared-module.main" target="21" />
+      <module name="ai-agent-service.shared-module.test" target="21" />
+      <module name="ai-agent-service.test" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="ai-agent-service" options="-parameters" />
-      <module name="ai-agent-service.main" options="-parameters" />
-      <module name="ai-agent-service.shared-module" options="-parameters" />
-      <module name="ai-agent-service.shared-module.main" options="-parameters" />
-      <module name="ai-agent-service.shared-module.test" options="-parameters" />
-      <module name="ai-agent-service.test" options="-parameters" />
       <module name="apiGateway" options="-parameters" />
       <module name="apiGateway.main" options="-parameters" />
       <module name="apiGateway.test" options="-parameters" />
@@ -35,6 +37,12 @@
       <module name="connectivityService.shared-module.main" options="-parameters" />
       <module name="connectivityService.shared-module.test" options="-parameters" />
       <module name="connectivityService.test" options="-parameters" />
+      <module name="decision-engine-service" options="-parameters" />
+      <module name="decision-engine-service.main" options="-parameters" />
+      <module name="decision-engine-service.shared-module" options="-parameters" />
+      <module name="decision-engine-service.shared-module.main" options="-parameters" />
+      <module name="decision-engine-service.shared-module.test" options="-parameters" />
+      <module name="decision-engine-service.test" options="-parameters" />
       <module name="deviceManagementService" options="-parameters" />
       <module name="deviceManagementService.main" options="-parameters" />
       <module name="deviceManagementService.shared-module" options="-parameters" />

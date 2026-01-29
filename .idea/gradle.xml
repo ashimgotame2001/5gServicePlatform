@@ -4,15 +4,6 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/ai-agent-service" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$/ai-agent-service" />
-            <option value="$PROJECT_DIR$/shared-module" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-      <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/apiGateway" />
         <option name="modules">
           <set>
@@ -34,6 +25,15 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/connectivityService" />
+            <option value="$PROJECT_DIR$/shared-module" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/decision-engine-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/decision-engine-service" />
             <option value="$PROJECT_DIR$/shared-module" />
           </set>
         </option>

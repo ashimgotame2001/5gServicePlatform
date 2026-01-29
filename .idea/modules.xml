@@ -3,13 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/5GServicePlatform.iml" filepath="$PROJECT_DIR$/.idea/5GServicePlatform.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ai-agent-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ai-agent-service.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1681854178/ai-agent-service.shared-module.main.iml" filepath="$PROJECT_DIR$/.idea/modules/1681854178/ai-agent-service.shared-module.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/apiGateway.main.iml" filepath="$PROJECT_DIR$/.idea/modules/apiGateway.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/auth-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/auth-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/1681854178/auth-service.shared-module.main.iml" filepath="$PROJECT_DIR$/.idea/modules/1681854178/auth-service.shared-module.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/connectivityService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/connectivityService.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/1681854178/connectivityService.shared-module.main.iml" filepath="$PROJECT_DIR$/.idea/modules/1681854178/connectivityService.shared-module.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1681854178/decision-engine-service.shared-module.main.iml" filepath="$PROJECT_DIR$/.idea/modules/1681854178/decision-engine-service.shared-module.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/deviceManagementService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/deviceManagementService.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/1681854178/deviceManagementService.shared-module.main.iml" filepath="$PROJECT_DIR$/.idea/modules/1681854178/deviceManagementService.shared-module.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/identification-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/identification-service.main.iml" />
