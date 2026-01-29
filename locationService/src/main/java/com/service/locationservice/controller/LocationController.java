@@ -1,8 +1,10 @@
 package com.service.locationservice.controller;
 
+import com.service.locationservice.service.GeofencingSubscriptionService;
 import com.service.locationservice.service.LocationService;
 import com.service.shared.annotation.MethodCode;
 import com.service.shared.dto.GlobalResponse;
+import com.service.shared.dto.request.CreateGeofencingSubscriptionDTO;
 import com.service.shared.dto.request.LocationRetrievalDTO;
 import com.service.shared.dto.request.LocationVerificationDto;
 import com.service.shared.util.ResponseHelper;
@@ -19,6 +21,7 @@ import java.util.Map;
 public class LocationController {
 
     private final LocationService locationService;
+    private final GeofencingSubscriptionService geofencingSubscriptionService;
 
     @GetMapping("/health")
     @MethodCode(value = "HC001", description = "Health check")
@@ -63,5 +66,32 @@ public class LocationController {
     public ResponseEntity<GlobalResponse> retrieveLocation(
             @RequestBody LocationRetrievalDTO request) {
         return ResponseEntity.ok(locationService.retrieveLocation(request));
+    }
+
+    @PostMapping("/geofencing/subscriptions")
+    @MethodCode(value = "GF001", description = "Create geofencing subscription")
+    public ResponseEntity<GlobalResponse> createGeofencingSubscription(
+            @RequestBody CreateGeofencingSubscriptionDTO request) {
+        return ResponseEntity.ok(geofencingSubscriptionService.createGeofencingSubscription(request));
+    }
+
+    @GetMapping("/geofencing/subscriptions")
+    @MethodCode(value = "GF002", description = "Get all geofencing subscriptions")
+    public ResponseEntity<GlobalResponse> getAllGeofencingSubscriptions() {
+        return ResponseEntity.ok(geofencingSubscriptionService.getAllGeofencingSubscriptions());
+    }
+
+    @GetMapping("/geofencing/subscriptions/{subscriptionId}")
+    @MethodCode(value = "GF003", description = "Get geofencing subscription by ID")
+    public ResponseEntity<GlobalResponse> getGeofencingSubscriptionById(
+            @PathVariable String subscriptionId) {
+        return ResponseEntity.ok(geofencingSubscriptionService.getGeofencingSubscriptionById(subscriptionId));
+    }
+
+    @DeleteMapping("/geofencing/subscriptions/{subscriptionId}")
+    @MethodCode(value = "GF004", description = "Delete geofencing subscription")
+    public ResponseEntity<GlobalResponse> deleteGeofencingSubscription(
+            @PathVariable String subscriptionId) {
+        return ResponseEntity.ok(geofencingSubscriptionService.deleteGeofencingSubscription(subscriptionId));
     }
 }
